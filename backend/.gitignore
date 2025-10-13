@@ -1,0 +1,10 @@
+# compilados
+/target/
+
+# configurações locais
+/.idea/
+/.vscode/
+/*.iml
+
+# logs
+*.log
