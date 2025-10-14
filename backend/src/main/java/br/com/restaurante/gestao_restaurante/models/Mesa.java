@@ -20,7 +20,7 @@ public class Mesa {
     private Integer numero;
 
     @Column(nullable = false)
-    private Integer status;
+    private String status;
 
     @OneToMany(mappedBy = "mesa")
     private List<Comanda> comandas;

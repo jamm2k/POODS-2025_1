@@ -1,8 +1,8 @@
 package br.com.restaurante.gestao_restaurante.services;
 
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDate;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import br.com.restaurante.gestao_restaurante.repositories.GarcomRepository;
@@ -21,6 +21,10 @@ public class GarcomService {
     public Garcom findByIdGarcom(Long id) {
         return garcomRepository.findById(id).orElse(null);
 
+    }
+
+    public List<Garcom> findAllGarcons() {
+        return garcomRepository.findAll();
     }
 
     public Garcom criarNovoGarcom(Garcom garcom) {
