@@ -1,4 +1,4 @@
-package br.com.restaurante.gestao_restaurante.controllers.dto;
+package br.com.restaurante.gestao_restaurante.dto.item;
 
 import lombok.Getter;
 import lombok.Setter;

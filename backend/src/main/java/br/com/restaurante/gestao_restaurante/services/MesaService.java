@@ -3,6 +3,9 @@ package br.com.restaurante.gestao_restaurante.services;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import br.com.restaurante.gestao_restaurante.repositories.MesaRepository;
+import br.com.restaurante.gestao_restaurante.dto.mesa.MesaCreateDTO;
+import br.com.restaurante.gestao_restaurante.dto.mesa.MesaUpdateNumeroDTO;
+import br.com.restaurante.gestao_restaurante.dto.mesa.MesaUpdateStatusDTO;
 import br.com.restaurante.gestao_restaurante.models.Mesa;
 
 @Service
@@ -15,32 +18,24 @@ public class MesaService {
     }
 
 
-    public Mesa criarNovaMesa(Mesa mesa) {
+    public Mesa criarNovaMesa(MesaCreateDTO mesaDTO) {
 
-        mesaRepository.findByNumero(mesa.getNumero()).ifPresent(m -> {
+        mesaRepository.findByNumero(mesaDTO.getNumero()).ifPresent(m -> {
             throw new RuntimeException("Erro: Número da mesa já cadastrado.");
         });
 
+        Mesa mesa = new Mesa();
+        mesa.setNumero(mesaDTO.getNumero());
         mesa.setStatus("LIVRE");
         return mesaRepository.save(mesa);
     }
 
-    public Mesa atualizarMesa(Long id, Mesa mesaAtualizada) {
+    public Mesa atualizarStatusMesa(Long id, MesaUpdateStatusDTO mesaAtualizada) {
         Mesa mesaExistente = this.findByIdMesa(id);
         if (mesaExistente == null) {
             throw new RuntimeException("Mesa não encontrada com o ID: " + id);
         }
 
-        if (mesaAtualizada.getNumero() != null && !mesaAtualizada.getNumero().equals(mesaExistente.getNumero())) {
-            mesaRepository.findByNumero(mesaAtualizada.getNumero()).ifPresent(m -> {
-                throw new IllegalStateException("Erro: Número da mesa já cadastrado em outra mesa.");
-            });
-            mesaExistente.setNumero(mesaAtualizada.getNumero());
-        }
-
-        if (mesaAtualizada.getNumero() != null) {
-            mesaExistente.setNumero(mesaAtualizada.getNumero());
-        }
         if (mesaAtualizada.getStatus() != null) {
             mesaExistente.setStatus(mesaAtualizada.getStatus());
         }
@@ -48,10 +43,29 @@ public class MesaService {
         return mesaRepository.save(mesaExistente);
     }
 
+    public Mesa atualizarNumeroMesa(Long id, MesaUpdateNumeroDTO mesaAtualizada) {
+        Mesa mesaExistente = this.findByIdMesa(id);
+        if (mesaExistente == null) {
+            throw new RuntimeException("Mesa não encontrada com o ID: " + id);
+        }
+
+        mesaRepository.findByNumero(mesaAtualizada.getNumero()).ifPresent(m -> {
+            if (!m.getId().equals(id)) {
+                throw new RuntimeException("Erro: Número da mesa já cadastrado.");
+            }
+        });
+
+        mesaExistente.setNumero(mesaAtualizada.getNumero());
+        return mesaRepository.save(mesaExistente);
+    }
+
     public void deletarMesa(Long id) {
         Mesa mesaExistente = this.findByIdMesa(id);
         if (mesaExistente == null) {
             throw new RuntimeException("Mesa não encontrada com o ID: " + id);
+        }
+        if (!"LIVRE".equals(mesaExistente.getStatus())) {
+            throw new RuntimeException("Erro: Apenas mesas com status 'LIVRE' podem ser deletadas.");
         }
         mesaRepository.deleteById(id);
     }

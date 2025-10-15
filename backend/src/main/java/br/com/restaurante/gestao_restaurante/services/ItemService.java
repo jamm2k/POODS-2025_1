@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import br.com.restaurante.gestao_restaurante.repositories.CardapioRepository;
 import br.com.restaurante.gestao_restaurante.repositories.ItemRepository;
-import br.com.restaurante.gestao_restaurante.controllers.dto.ItemCreateDTO;
+import br.com.restaurante.gestao_restaurante.dto.item.ItemCreateDTO;
 import br.com.restaurante.gestao_restaurante.models.Cardapio;
 import br.com.restaurante.gestao_restaurante.models.Item;
 
