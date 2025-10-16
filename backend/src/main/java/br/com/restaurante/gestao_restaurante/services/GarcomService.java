@@ -21,6 +21,7 @@ public class GarcomService {
 
     @Autowired
     private UsuarioRepository  usuarioRepository;
+    
     @Autowired
     private GarcomMapper garcomMapper;
     
