@@ -24,4 +24,5 @@ public class Mesa {
 
     @OneToMany(mappedBy = "mesa")
     private List<Comanda> comandas;
+
 }

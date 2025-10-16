@@ -4,9 +4,12 @@ import java.time.LocalDate;
 import lombok.Getter;
 import lombok.Setter;
 
+
 @Getter
 @Setter
 public class GarcomResponseDTO {
+    
+    private Long id;
     private String nome;
     private String email;
     private String cpf;
