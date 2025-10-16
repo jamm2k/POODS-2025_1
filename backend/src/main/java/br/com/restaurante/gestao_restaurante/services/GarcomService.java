@@ -8,7 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import br.com.restaurante.gestao_restaurante.repositories.GarcomRepository;
 import br.com.restaurante.gestao_restaurante.repositories.UsuarioRepository;
 import br.com.restaurante.gestao_restaurante.dto.garcom.GarcomCreateDTO;
+import br.com.restaurante.gestao_restaurante.dto.garcom.GarcomResponseDTO;
 import br.com.restaurante.gestao_restaurante.dto.garcom.GarcomUpdateDTO;
+import br.com.restaurante.gestao_restaurante.mapper.GarcomMapper;
 import br.com.restaurante.gestao_restaurante.models.Garcom;
 
 @Service
@@ -19,10 +21,13 @@ public class GarcomService {
 
     @Autowired
     private UsuarioRepository  usuarioRepository;
+    @Autowired
+    private GarcomMapper garcomMapper;
     
-    public Garcom findByIdGarcom(Long id) {
-        return garcomRepository.findById(id).orElse(null);
-
+    public GarcomResponseDTO findByIdGarcom(Long id) {
+        Garcom garcom = garcomRepository.findById(id).orElse(null);
+        
+        return garcomMapper.toResponseDTO(garcom);
     }
 
     public List<Garcom> findAllGarcons() {
@@ -39,23 +44,15 @@ public class GarcomService {
             throw new RuntimeException("Erro: CPF já cadastrado.");
         });
 
-        Garcom garcom = new Garcom();
-        garcom.setNome(garcomDTO.getNome());
-        garcom.setEmail(garcomDTO.getEmail());
-        garcom.setCpf(garcomDTO.getCpf());
-        garcom.setSenha(garcomDTO.getSenha());
-        garcom.setSalario(garcomDTO.getSalario());
-        garcom.setTipoUsuario("GARCOM");
-        garcom.setMatricula(garcomDTO.getMatricula());
-        if(garcom.getDataAdmissao() == null){
-            garcom.setDataAdmissao(LocalDate.now());
+        Garcom novoGarcom = garcomMapper.toEntity(garcomDTO);
+        if(novoGarcom.getDataAdmissao() == null){
+            novoGarcom.setDataAdmissao(LocalDate.now());
         }
-
-        return garcomRepository.save(garcom);
+        return garcomRepository.save(novoGarcom);
     }
 
-    public Garcom atualizarGarcom(Long id, GarcomUpdateDTO garcomAtualizado) {
-        Garcom garcomExistente = this.findByIdGarcom(id);
+    public GarcomResponseDTO atualizarGarcom(Long id, GarcomUpdateDTO garcomAtualizado) {
+        Garcom garcomExistente = garcomRepository.findById(id).orElse(null);
         if (garcomExistente == null) {
             throw new RuntimeException("Garçom não encontrado com o ID: " + id);
         }
@@ -72,20 +69,17 @@ public class GarcomService {
         if (garcomAtualizado.getEmail() != null) {
             garcomExistente.setEmail(garcomAtualizado.getEmail());
         }
-        if (garcomAtualizado.getSenha() != null) {
-            garcomExistente.setSenha(garcomAtualizado.getSenha());
-        }
         if (garcomAtualizado.getSalario() != null) { 
             garcomExistente.setSalario(garcomAtualizado.getSalario());
         }
         
-
-        return garcomRepository.save(garcomExistente);
+        Garcom garcomSalvo = garcomRepository.save(garcomExistente);
+        return garcomMapper.toResponseDTO(garcomSalvo);
         }
     
 
     public void deletarGarcom(Long id) {
-        Garcom garcomExistente = this.findByIdGarcom(id);
+        Garcom garcomExistente = garcomRepository.findById(id).orElse(null);
         if (garcomExistente == null) {
             throw new RuntimeException("Garçom não encontrado com o ID: " + id);
         }

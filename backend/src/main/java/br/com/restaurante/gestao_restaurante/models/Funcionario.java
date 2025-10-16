@@ -10,7 +10,7 @@ import lombok.*;
 @Table(name = "funcionarios")
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = false)
 @PrimaryKeyJoinColumn(name = "usuario_id")
 public class Funcionario extends Usuario {
 

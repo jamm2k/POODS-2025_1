@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import br.com.restaurante.gestao_restaurante.repositories.CardapioRepository;
 import br.com.restaurante.gestao_restaurante.repositories.ItemRepository;
 import br.com.restaurante.gestao_restaurante.dto.item.ItemCreateDTO;
+import br.com.restaurante.gestao_restaurante.dto.item.ItemUpdateDTO;
 import br.com.restaurante.gestao_restaurante.models.Cardapio;
 import br.com.restaurante.gestao_restaurante.models.Item;
 
@@ -45,29 +46,29 @@ public class ItemService {
         return itemRepository.save(item);
     }
 
-    public Item atualizarItem(Long id, ItemCreateDTO itemDTO) {
+    public Item atualizarItem(Long id, ItemUpdateDTO itemUpdateDTO) {
         Item itemExistente = this.findByIdItem(id);
         
         if (itemExistente == null) {
             throw new RuntimeException("Item não encontrado com o ID: " + id);
         }
 
-        if (itemDTO.getNome() != null && !itemDTO.getNome().equals(itemExistente.getNome())) {
-            itemRepository.findByNome(itemDTO.getNome()).ifPresent(i -> {
+        if (itemUpdateDTO.getNome() != null && !itemUpdateDTO.getNome().equals(itemExistente.getNome())) {
+            itemRepository.findByNome(itemUpdateDTO.getNome()).ifPresent(i -> {
                 throw new IllegalStateException("Erro: Nome do item já cadastrado em outro item.");
             });
-            itemExistente.setNome(itemDTO.getNome());
+            itemExistente.setNome(itemUpdateDTO.getNome());
         }
 
-        if (itemDTO.getPreco() != null) {
-            itemExistente.setPreco(itemDTO.getPreco());
+        if (itemUpdateDTO.getPreco() != null) {
+            itemExistente.setPreco(itemUpdateDTO.getPreco());
         }
-        if (itemDTO.getCategoria() != null) {
-            itemExistente.setCategoria(itemDTO.getCategoria());
+        if (itemUpdateDTO.getCategoria() != null) {
+            itemExistente.setCategoria(itemUpdateDTO.getCategoria());
         }
-        if (itemDTO.getCardapioId() != null) {
-            Cardapio cardapio = cardapioRepository.findById(itemDTO.getCardapioId())
-                .orElseThrow(() -> new RuntimeException("Cardápio não encontrado com o ID: " + itemDTO.getCardapioId()));
+        if (itemUpdateDTO.getCardapioId() != null) {
+            Cardapio cardapio = cardapioRepository.findById(itemUpdateDTO.getCardapioId())
+                .orElseThrow(() -> new RuntimeException("Cardápio não encontrado com o ID: " + itemUpdateDTO.getCardapioId()));
             itemExistente.setCardapio(cardapio);
         }
 
