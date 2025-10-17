@@ -35,7 +35,7 @@ public class GarcomService {
         return garcomRepository.findAll();
     }
 
-    public Garcom criarNovoGarcom(GarcomCreateDTO garcomDTO) {
+    public GarcomResponseDTO criarNovoGarcom(GarcomCreateDTO garcomDTO) {
         
         usuarioRepository.findByEmail(garcomDTO.getEmail()).ifPresent(u ->{
             throw new RuntimeException("Erro: E-mail já cadastrado.");
@@ -49,7 +49,8 @@ public class GarcomService {
         if(novoGarcom.getDataAdmissao() == null){
             novoGarcom.setDataAdmissao(LocalDate.now());
         }
-        return garcomRepository.save(novoGarcom);
+        Garcom garcomSalvo = garcomRepository.save(novoGarcom);
+        return garcomMapper.toResponseDTO(garcomSalvo);
     }
 
     public GarcomResponseDTO atualizarGarcom(Long id, GarcomUpdateDTO garcomAtualizado) {

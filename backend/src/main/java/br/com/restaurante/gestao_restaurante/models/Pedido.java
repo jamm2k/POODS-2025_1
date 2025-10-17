@@ -26,6 +26,10 @@ public class Pedido {
     @JoinColumn(name = "item_id", nullable = true)
     private Item item;
 
+    @ManyToOne
+    @JoinColumn(name = "cozinheiro_id", nullable = true)
+    private Cozinheiro cozinheiro;
+
     @Column(nullable = false)
     private Integer quantidade;
 

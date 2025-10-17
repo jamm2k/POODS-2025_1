@@ -7,7 +7,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import br.com.restaurante.gestao_restaurante.dto.comanda.ComandaCreateDTO;
 import br.com.restaurante.gestao_restaurante.dto.comanda.ComandaResponseDTO;
-import br.com.restaurante.gestao_restaurante.dto.comanda.ComandaUpdateDTO;
+//import br.com.restaurante.gestao_restaurante.dto.comanda.ComandaUpdateDTO;
 import br.com.restaurante.gestao_restaurante.models.Comanda;
 import br.com.restaurante.gestao_restaurante.models.Garcom;
 import br.com.restaurante.gestao_restaurante.models.Mesa;
@@ -72,7 +72,7 @@ public class ComandaService {
         if (mesa.getStatus().equals("LIVRE")) {
             mesa.setStatus("Ocupada");
         }
-        
+
         mesaRepository.save(mesa);
         
         Comanda comandaSalva = comandaRepository.save(comanda);

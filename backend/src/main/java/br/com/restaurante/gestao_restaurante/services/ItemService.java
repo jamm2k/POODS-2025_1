@@ -55,9 +55,6 @@ public class ItemService {
     public ItemResponseDTO atualizarItem(Long id, ItemUpdateDTO itemUpdateDTO) {
         Item itemExistente = itemRepository.findById(id).orElse(null);
         
-        if (itemExistente == null) {
-            throw new RuntimeException("Item não encontrado com o ID: " + id);
-        }
 
         if (itemUpdateDTO.getNome() != null && !itemUpdateDTO.getNome().equals(itemExistente.getNome())) {
             itemRepository.findByNome(itemUpdateDTO.getNome()).ifPresent(i -> {
