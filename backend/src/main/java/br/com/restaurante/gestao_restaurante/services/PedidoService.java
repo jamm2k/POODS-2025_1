@@ -12,6 +12,7 @@ import br.com.restaurante.gestao_restaurante.models.Cozinheiro;
 import br.com.restaurante.gestao_restaurante.models.Garcom;
 import br.com.restaurante.gestao_restaurante.models.Item;
 import br.com.restaurante.gestao_restaurante.models.Pedido;
+import br.com.restaurante.gestao_restaurante.dto.pedido.PedidoUpdateDTO;
 import br.com.restaurante.gestao_restaurante.dto.pedido.PedidoCreateDTO;
 import br.com.restaurante.gestao_restaurante.dto.pedido.PedidoResponseDTO;
 import br.com.restaurante.gestao_restaurante.mapper.PedidoMapper;
@@ -64,17 +65,51 @@ public class PedidoService {
         Comanda comanda = comandaRepository.findById(pedidoDTO.getComandaId())
             .orElseThrow(() -> new RuntimeException("Comanda não encontrada com o ID: " + pedidoDTO.getComandaId()));
         
+        if(!"ABERTA".equals(comanda.getStatus())) {
+            throw new RuntimeException("Não é possível adicionar pedidos a uma comanda fechada.");
+        }
         Item item = itemRepository.findById(pedidoDTO.getItemId())
             .orElseThrow(() -> new RuntimeException("Item não encontrado com o ID: " + pedidoDTO.getItemId()));
-            
-        Cozinheiro cozinheiro = cozinheiroRepository.findById(pedidoDTO.getCozinheiroId())
-            .orElseThrow(() -> new RuntimeException("Cozinheiro não encontrado com o ID: " + pedidoDTO.getCozinheiroId()));
 
+        
+        pedido.setGarcom(garcom);
+        pedido.setComanda(comanda);
+        pedido.setItem(item);
+        pedido.setCozinheiro(null);
 
-
+        atualizarValorTotalComanda(comanda);
 
         Pedido pedidoSalvo = pedidoRepository.save(pedido);
         return pedidoMapper.toResponseDTO(pedidoSalvo);
     }
+
+    private void atualizarValorTotalComanda(Comanda comanda) {
+        List<Pedido> pedidos = pedidoRepository.findByComanda(comanda);
+
+        Double valorTotal = 0.0;
+        for (Pedido p : pedidos) {
+            if (p.getItem() != null && p.getQuantidade() != null) {
+                valorTotal += p.getItem().getPreco() * p.getQuantidade();
+            }
+        }
+        comanda.setValorTotal(valorTotal);
+        comandaRepository.save(comanda);
+    }
     
+    public PedidoResponseDTO atualizarPedido (Long id, PedidoUpdateDTO pedidoDTO) {
+        Pedido pedidoExistente = this.findById(id);
+        Comanda comanda = pedidoExistente.getComanda();
+
+        if (pedidoDTO.getObs() != null) {
+            pedidoExistente.setObs(pedidoDTO.getObs());
+        }
+        if (pedidoDTO.getQuantidade() != null) {
+            pedidoExistente.setQuantidade(pedidoDTO.getQuantidade());
+        }
+        atualizarValorTotalComanda(comanda);
+        
+
+        Pedido pedidoSalvo = pedidoRepository.save(pedidoExistente);
+        return pedidoMapper.toResponseDTO(pedidoSalvo);
+    }
 }
