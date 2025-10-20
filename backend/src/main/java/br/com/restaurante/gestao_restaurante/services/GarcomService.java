@@ -29,7 +29,7 @@ public class GarcomService {
     @Autowired
     private GarcomMapper garcomMapper;
     
-    public Garcom findById(Long id) {
+    private Garcom findById(Long id) {
         return garcomRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Garçom não encontrado com o ID: " + id));
     }

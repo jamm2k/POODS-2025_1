@@ -112,4 +112,9 @@ public class PedidoService {
         Pedido pedidoSalvo = pedidoRepository.save(pedidoExistente);
         return pedidoMapper.toResponseDTO(pedidoSalvo);
     }
+
+    public void deletarPedido (Long id){
+        Pedido pedidoExistente = this.findById(id);
+        pedidoRepository.delete(pedidoExistente);
+    }
 }

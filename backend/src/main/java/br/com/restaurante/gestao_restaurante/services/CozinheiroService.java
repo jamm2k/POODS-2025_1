@@ -1,12 +1,16 @@
 package br.com.restaurante.gestao_restaurante.services;
 
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import br.com.restaurante.gestao_restaurante.repositories.CozinheiroRepository;
 import br.com.restaurante.gestao_restaurante.repositories.FuncionarioRepository;
 import br.com.restaurante.gestao_restaurante.models.Cozinheiro;
 import br.com.restaurante.gestao_restaurante.dto.cozinheiro.CozinheiroCreateDTO;
 import br.com.restaurante.gestao_restaurante.dto.cozinheiro.CozinheiroUpdateDTO;
+import br.com.restaurante.gestao_restaurante.dto.cozinheiro.CozinheiroUpdateStatus;
 import br.com.restaurante.gestao_restaurante.dto.cozinheiro.CozinheiroResponseDTO;
 import br.com.restaurante.gestao_restaurante.mapper.CozinheiroMapper;
 import br.com.restaurante.gestao_restaurante.repositories.UsuarioRepository;
@@ -27,11 +31,16 @@ public class CozinheiroService {
 
     @Autowired
     private FuncionarioRepository funcionarioRepository;
-
-
-   private Cozinheiro findById(Long id) {
+    
+    public List<CozinheiroResponseDTO> findAllCozinheiros() {
+        return cozinheiroRepository.findAll().stream()
+            .map(cozinheiroMapper::toResponseDTO)
+            .toList();
+    }
+    
+    private Cozinheiro findById(Long id) {
         return cozinheiroRepository.findById(id)
-            .orElseThrow(() -> new EntityNotFoundException("Cozinheiro não encontrado com o ID: " + id));
+        .orElseThrow(() -> new EntityNotFoundException("Cozinheiro não encontrado com o ID: " + id));
     }
 
     public CozinheiroResponseDTO findByIdCozinheiro(Long id) {
@@ -39,7 +48,7 @@ public class CozinheiroService {
         return cozinheiroMapper.toResponseDTO(cozinheiro);
     }
 
-    public CozinheiroResponseDTO createCozinheiro(CozinheiroCreateDTO cozinheiroCreateDTO) {
+    public CozinheiroResponseDTO criarCozinheiro(CozinheiroCreateDTO cozinheiroCreateDTO) {
         usuarioRepository.findByEmail(cozinheiroCreateDTO.getEmail()).ifPresent(u ->{
             throw new RuntimeException("Erro: E-mail já cadastrado.");
         });
@@ -80,21 +89,24 @@ public class CozinheiroService {
         return cozinheiroMapper.toResponseDTO(cozinheiroSalvo);
     }
 
-    public void alterarStatusCozinheiro(Long id, String status) {
-        if(!status.equals("LIVRE") && !status.equals("OCUPADO") || status == null ) {
+    public CozinheiroResponseDTO alterarStatusCozinheiro(Long id, CozinheiroUpdateStatus statusDTO) {
+        if(!statusDTO.getStatus().equals("LIVRE") && !statusDTO.getStatus().equals("OCUPADO") || statusDTO.getStatus() == null ) {
             throw new RuntimeException("Erro: Status inválido. Use 'LIVRE' ou 'OCUPADO'.");
         }
         
         Cozinheiro cozinheiroExistente = this.findById(id);
-        cozinheiroExistente.setStatus(status);
-        cozinheiroRepository.save(cozinheiroExistente);
+        cozinheiroExistente.setStatus(statusDTO.getStatus());
+        Cozinheiro cozinheiroSalvo = cozinheiroRepository.save(cozinheiroExistente);
+        return cozinheiroMapper.toResponseDTO(cozinheiroSalvo);
+        
     }
 
-    public void deleteCozinheiro(Long id) {
+    public void deletarCozinheiro(Long id) {
         Cozinheiro cozinheiroExistente = cozinheiroRepository.findById(id).orElse(null);
         if (cozinheiroExistente == null) {
             throw new RuntimeException("Cozinheiro não encontrado com o ID: " + id);
         }
         cozinheiroRepository.deleteById(id);
     }
+
 }

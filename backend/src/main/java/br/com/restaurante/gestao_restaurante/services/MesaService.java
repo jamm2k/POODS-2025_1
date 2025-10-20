@@ -1,6 +1,9 @@
 package br.com.restaurante.gestao_restaurante.services;
 
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import br.com.restaurante.gestao_restaurante.repositories.MesaRepository;
 import br.com.restaurante.gestao_restaurante.dto.mesa.MesaCreateDTO;
@@ -15,7 +18,7 @@ public class MesaService {
     
     @Autowired
     private MesaRepository mesaRepository;
-
+    
     @Autowired
     private MesaMapper mesaMapper;
 
@@ -23,10 +26,16 @@ public class MesaService {
         Mesa mesa = mesaRepository.findById(id).orElse(null);
         return mesaMapper.toResponseDTO(mesa);
     }
-
-
+    
+    public List<MesaResponseDTO> findAllMesas() {
+        return mesaRepository.findAll()
+            .stream()
+            .map(mesaMapper::toResponseDTO)
+            .toList();    
+    }
+    
     public MesaResponseDTO criarNovaMesa(MesaCreateDTO mesaDTO) {
-
+        
         mesaRepository.findByNumero(mesaDTO.getNumero()).ifPresent(m -> {
             throw new RuntimeException("Erro: Número da mesa já cadastrado.");
         });
@@ -79,4 +88,6 @@ public class MesaService {
         }
         mesaRepository.deleteById(id);
     }
+
+
 }
