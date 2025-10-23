@@ -251,7 +251,8 @@ CREATE TABLE public.pedidos (
     id_item integer NOT NULL,
     id_cozinheiro integer,
     quantidade integer NOT NULL,
-    obs character varying(50)
+    obs character varying(255),
+    statusPedido character varying(50) DEFAULT 'SOLICITADO' :: character varying NOT NULL
 );
 
 
