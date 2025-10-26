@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import br.com.restaurante.gestao_restaurante.dto.cozinheiro.CozinheiroCreateDTO;
 import br.com.restaurante.gestao_restaurante.dto.cozinheiro.CozinheiroResponseDTO;
 import br.com.restaurante.gestao_restaurante.dto.cozinheiro.CozinheiroUpdateDTO;
-import br.com.restaurante.gestao_restaurante.dto.cozinheiro.CozinheiroUpdateStatus;
+import br.com.restaurante.gestao_restaurante.dto.cozinheiro.CozinheiroUpdateStatusDTO;
 import br.com.restaurante.gestao_restaurante.services.CozinheiroService;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -52,7 +52,7 @@ public class CozinheiroController {
     }
 
     @PutMapping("/{id}/status")
-    public ResponseEntity<Void> atualizarStatusCozinheiro(@PathVariable Long id, @RequestBody CozinheiroUpdateStatus statusDTO) {
+    public ResponseEntity<Void> atualizarStatusCozinheiro(@PathVariable Long id, @RequestBody CozinheiroUpdateStatusDTO statusDTO) {
         cozinheiroService.alterarStatusCozinheiro(id, statusDTO);
         return ResponseEntity.noContent().build();
     }

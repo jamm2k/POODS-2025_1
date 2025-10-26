@@ -13,4 +13,5 @@ public class PedidoResponseDTO {
     private Long cozinheiroId;
     private Integer quantidade;
     private String obs;
+    private String status;
 }

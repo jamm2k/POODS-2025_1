@@ -13,6 +13,9 @@ import br.com.restaurante.gestao_restaurante.models.Garcom;
 import br.com.restaurante.gestao_restaurante.models.Item;
 import br.com.restaurante.gestao_restaurante.models.Pedido;
 import br.com.restaurante.gestao_restaurante.dto.pedido.PedidoUpdateDTO;
+import br.com.restaurante.gestao_restaurante.dto.pedido.PedidoUpdateStatusDTO;
+import br.com.restaurante.gestao_restaurante.dto.cozinheiro.CozinheiroResponseDTO;
+import br.com.restaurante.gestao_restaurante.dto.cozinheiro.CozinheiroUpdateStatusDTO;
 import br.com.restaurante.gestao_restaurante.dto.pedido.PedidoCreateDTO;
 import br.com.restaurante.gestao_restaurante.dto.pedido.PedidoResponseDTO;
 import br.com.restaurante.gestao_restaurante.mapper.PedidoMapper;
@@ -38,6 +41,9 @@ public class PedidoService {
 
     @Autowired
     private CozinheiroRepository cozinheiroRepository;
+
+    @Autowired
+    private CozinheiroService cozinheiroService;
 
     private Pedido findById(Long id) {
         return pedidoRepository.findById(id)
@@ -76,6 +82,7 @@ public class PedidoService {
         pedido.setComanda(comanda);
         pedido.setItem(item);
         pedido.setCozinheiro(null);
+        pedido.setStatus("SOLICITADO");
 
         atualizarValorTotalComanda(comanda);
 
@@ -100,11 +107,13 @@ public class PedidoService {
         Pedido pedidoExistente = this.findById(id);
         Comanda comanda = pedidoExistente.getComanda();
 
-        if (pedidoDTO.getObs() != null) {
-            pedidoExistente.setObs(pedidoDTO.getObs());
-        }
-        if (pedidoDTO.getQuantidade() != null) {
-            pedidoExistente.setQuantidade(pedidoDTO.getQuantidade());
+        if("SOLICITADO".equals(pedidoExistente.getStatus())){
+            if (pedidoDTO.getObs() != null) {
+                pedidoExistente.setObs(pedidoDTO.getObs());
+            }
+            if (pedidoDTO.getQuantidade() != null) {
+                pedidoExistente.setQuantidade(pedidoDTO.getQuantidade());
+            }
         }
         atualizarValorTotalComanda(comanda);
         
@@ -113,8 +122,85 @@ public class PedidoService {
         return pedidoMapper.toResponseDTO(pedidoSalvo);
     }
 
+    public PedidoResponseDTO atualizarStatusPedido(Long id, PedidoUpdateStatusDTO pedidoDTO){
+        Pedido pedidoExistente = this.findById(id);
+        if (pedidoDTO.getStatusPedido() != null) {
+            pedidoExistente.setStatus(pedidoDTO.getStatusPedido());
+        }
+
+        Pedido pedidoSalvo = pedidoRepository.save(pedidoExistente);
+        return pedidoMapper.toResponseDTO(pedidoSalvo);
+    }
+
+    public PedidoResponseDTO atribuirCozinheiro(Long pedidoId, Long cozinheiroId){
+        Cozinheiro cozinheiro = cozinheiroService.findById(cozinheiroId);
+        Pedido pedido = this.findById(pedidoId);
+
+        PedidoUpdateStatusDTO statusDTO = new PedidoUpdateStatusDTO();
+        CozinheiroUpdateStatusDTO cozinheiroStatusDTO = new CozinheiroUpdateStatusDTO();
+
+
+        if (pedido.getCozinheiro() == null && "LIVRE".equals(cozinheiro.getStatus())) {
+            pedido.setCozinheiro(cozinheiro);
+            pedidoRepository.save(pedido);
+            
+            statusDTO.setStatusPedido("EM PREPARO");
+            
+            cozinheiroStatusDTO.setStatus("OCUPADO");
+            cozinheiroService.alterarStatusCozinheiro(cozinheiroId, cozinheiroStatusDTO);
+
+        }else{
+            if (pedido.getCozinheiro() != null) throw new IllegalStateException("Pedido já atribuído a outro cozinheiro.");
+            if (!"LIVRE".equals(cozinheiro.getStatus())) throw new IllegalStateException("Cozinheiro não está livre.");
+        }       
+
+        return this.atualizarStatusPedido(pedidoId, statusDTO);
+    }
+
+    public PedidoResponseDTO concluirPedido(Long pedidoId, Long cozinheiroId){
+        Pedido pedido = this.findById(pedidoId);
+
+        CozinheiroUpdateStatusDTO cozinheiroStatusDTO = new CozinheiroUpdateStatusDTO();
+        PedidoUpdateStatusDTO pedidoStatusDTO = new PedidoUpdateStatusDTO();
+
+        if(!"EM PREPARO".equals(pedido.getStatus())){
+            throw new IllegalStateException("Não se pode concluir pedidos antes do preparo.");
+        }
+
+        cozinheiroStatusDTO.setStatus("LIVRE");
+        cozinheiroService.alterarStatusCozinheiro(cozinheiroId, cozinheiroStatusDTO);
+
+        pedidoStatusDTO.setStatusPedido("PRONTO");
+        
+
+        return this.atualizarStatusPedido(pedidoId, pedidoStatusDTO);
+    }
+
+    public PedidoResponseDTO marcarPedidoEntregue(Long id){
+        Pedido pedido = this.findById(id);
+        PedidoUpdateStatusDTO pedidoStatusDTO = new PedidoUpdateStatusDTO();
+
+        if(!"PRONTO".equals(pedido.getStatus())){
+            throw new IllegalStateException("Não pode entregar pedido não pronto");
+        }
+
+        pedidoStatusDTO.setStatusPedido("ENTREGUE");
+        return this.atualizarStatusPedido(id, pedidoStatusDTO);        
+    }
+
+    public List<PedidoResponseDTO> buscarPedidoPorStatus(String status){
+        return pedidoRepository.findByStatus(status)
+            .stream()
+            .map(pedidoMapper::toResponseDTO)
+            .toList();
+    }
+
     public void deletarPedido (Long id){
         Pedido pedidoExistente = this.findById(id);
         pedidoRepository.delete(pedidoExistente);
+
+        Comanda comanda = pedidoExistente.getComanda();
+        atualizarValorTotalComanda(comanda);
     }
+
 }

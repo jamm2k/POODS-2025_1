@@ -10,7 +10,7 @@ import br.com.restaurante.gestao_restaurante.repositories.FuncionarioRepository;
 import br.com.restaurante.gestao_restaurante.models.Cozinheiro;
 import br.com.restaurante.gestao_restaurante.dto.cozinheiro.CozinheiroCreateDTO;
 import br.com.restaurante.gestao_restaurante.dto.cozinheiro.CozinheiroUpdateDTO;
-import br.com.restaurante.gestao_restaurante.dto.cozinheiro.CozinheiroUpdateStatus;
+import br.com.restaurante.gestao_restaurante.dto.cozinheiro.CozinheiroUpdateStatusDTO;
 import br.com.restaurante.gestao_restaurante.dto.cozinheiro.CozinheiroResponseDTO;
 import br.com.restaurante.gestao_restaurante.mapper.CozinheiroMapper;
 import br.com.restaurante.gestao_restaurante.repositories.UsuarioRepository;
@@ -38,7 +38,7 @@ public class CozinheiroService {
             .toList();
     }
     
-    private Cozinheiro findById(Long id) {
+    protected Cozinheiro findById(Long id) {
         return cozinheiroRepository.findById(id)
         .orElseThrow(() -> new EntityNotFoundException("Cozinheiro não encontrado com o ID: " + id));
     }
@@ -89,13 +89,14 @@ public class CozinheiroService {
         return cozinheiroMapper.toResponseDTO(cozinheiroSalvo);
     }
 
-    public CozinheiroResponseDTO alterarStatusCozinheiro(Long id, CozinheiroUpdateStatus statusDTO) {
+    public CozinheiroResponseDTO alterarStatusCozinheiro(Long id, CozinheiroUpdateStatusDTO statusDTO) {
         if(!statusDTO.getStatus().equals("LIVRE") && !statusDTO.getStatus().equals("OCUPADO") || statusDTO.getStatus() == null ) {
             throw new RuntimeException("Erro: Status inválido. Use 'LIVRE' ou 'OCUPADO'.");
         }
         
         Cozinheiro cozinheiroExistente = this.findById(id);
         cozinheiroExistente.setStatus(statusDTO.getStatus());
+        
         Cozinheiro cozinheiroSalvo = cozinheiroRepository.save(cozinheiroExistente);
         return cozinheiroMapper.toResponseDTO(cozinheiroSalvo);
         

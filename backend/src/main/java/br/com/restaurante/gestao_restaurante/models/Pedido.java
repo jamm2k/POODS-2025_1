@@ -36,4 +36,7 @@ public class Pedido {
     @Column(nullable = true)
     private String obs;
 
+    @Column(nullable = false)
+    private String status;
+
 }
