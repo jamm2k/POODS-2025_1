@@ -4,7 +4,7 @@ import { useState, PropsWithChildren } from 'react'
 import './App.css'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import LoginPage from './pages/Login/LoginPage';
+import LoginPage from './pages/Auth/LoginPage';
 //import DashboardPage from './pages/DashboardPage';
 
 const PrivateRoute = ({ children }: PropsWithChildren) => {
