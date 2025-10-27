@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import br.com.restaurante.gestao_restaurante.repositories.FuncionarioRepository;
 import br.com.restaurante.gestao_restaurante.repositories.GarcomRepository;
 import br.com.restaurante.gestao_restaurante.repositories.UsuarioRepository;
@@ -28,6 +29,9 @@ public class GarcomService {
     
     @Autowired
     private GarcomMapper garcomMapper;
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
     
     private Garcom findById(Long id) {
         return garcomRepository.findById(id)
@@ -65,6 +69,8 @@ public class GarcomService {
             novoGarcom.setDataAdmissao(LocalDate.now());
         }
         novoGarcom.setTipoUsuario("GARCOM");
+
+        novoGarcom.setSenha(passwordEncoder.encode(garcomDTO.getSenha()));
 
         Garcom garcomSalvo = garcomRepository.save(novoGarcom);
         return garcomMapper.toResponseDTO(garcomSalvo);

@@ -1,5 +1,5 @@
 package br.com.restaurante.gestao_restaurante.services;
-
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,6 +19,9 @@ import jakarta.persistence.EntityNotFoundException;
 
 @Service
 public class CozinheiroService {
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
     
     @Autowired
     private CozinheiroRepository cozinheiroRepository;
@@ -31,6 +34,10 @@ public class CozinheiroService {
 
     @Autowired
     private FuncionarioRepository funcionarioRepository;
+
+    CozinheiroService(PasswordEncoder passwordEncoder) {
+        this.passwordEncoder = passwordEncoder;
+    }
     
     public List<CozinheiroResponseDTO> findAllCozinheiros() {
         return cozinheiroRepository.findAll().stream()
@@ -64,6 +71,8 @@ public class CozinheiroService {
         novoCozinheiro.setDataAdmissao(java.time.LocalDate.now());
         novoCozinheiro.setTipoUsuario("COZINHEIRO");
         novoCozinheiro.setStatus("LIVRE");
+
+        novoCozinheiro.setSenha(passwordEncoder.encode(cozinheiroCreateDTO.getSenha()));
 
         Cozinheiro cozinheiroSalvo = cozinheiroRepository.save(novoCozinheiro);
         return cozinheiroMapper.toResponseDTO(cozinheiroSalvo);

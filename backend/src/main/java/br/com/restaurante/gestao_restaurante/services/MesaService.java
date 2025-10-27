@@ -82,8 +82,15 @@ public class MesaService {
     public List<MesaResponseDTO> buscarMesaPorStatus(String status){
         return mesaRepository.findByStatus(status)
             .stream()
-            .map(pedidoMapper::toResponseDTO)
+            .map(mesaMapper::toResponseDTO)
             .toList();
+    }
+    
+    public MesaResponseDTO buscarMesaPorNumero(Integer numero){
+        Mesa mesa = mesaRepository.findByNumero(numero)
+            .orElseThrow(() -> new EntityNotFoundException("Mesa não encontrada com o numero:" + numero));
+        return mesaMapper.toResponseDTO(mesa);
+
     }
 
     public void deletarMesa(Long id) {
