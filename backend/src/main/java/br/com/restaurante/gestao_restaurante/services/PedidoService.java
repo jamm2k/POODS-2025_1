@@ -6,7 +6,6 @@ import br.com.restaurante.gestao_restaurante.repositories.PedidoRepository;
 import br.com.restaurante.gestao_restaurante.repositories.GarcomRepository;
 import br.com.restaurante.gestao_restaurante.repositories.ComandaRepository;
 import br.com.restaurante.gestao_restaurante.repositories.ItemRepository;
-import br.com.restaurante.gestao_restaurante.repositories.CozinheiroRepository;
 import br.com.restaurante.gestao_restaurante.models.Comanda;
 import br.com.restaurante.gestao_restaurante.models.Cozinheiro;
 import br.com.restaurante.gestao_restaurante.models.Garcom;
@@ -14,7 +13,6 @@ import br.com.restaurante.gestao_restaurante.models.Item;
 import br.com.restaurante.gestao_restaurante.models.Pedido;
 import br.com.restaurante.gestao_restaurante.dto.pedido.PedidoUpdateDTO;
 import br.com.restaurante.gestao_restaurante.dto.pedido.PedidoUpdateStatusDTO;
-import br.com.restaurante.gestao_restaurante.dto.cozinheiro.CozinheiroResponseDTO;
 import br.com.restaurante.gestao_restaurante.dto.cozinheiro.CozinheiroUpdateStatusDTO;
 import br.com.restaurante.gestao_restaurante.dto.pedido.PedidoCreateDTO;
 import br.com.restaurante.gestao_restaurante.dto.pedido.PedidoResponseDTO;
@@ -38,9 +36,6 @@ public class PedidoService {
     
     @Autowired
     private ItemRepository itemRepository;
-
-    @Autowired
-    private CozinheiroRepository cozinheiroRepository;
 
     @Autowired
     private CozinheiroService cozinheiroService;

@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import br.com.restaurante.gestao_restaurante.repositories.MesaRepository;
+import jakarta.persistence.EntityNotFoundException;
 import br.com.restaurante.gestao_restaurante.dto.mesa.MesaCreateDTO;
 import br.com.restaurante.gestao_restaurante.dto.mesa.MesaResponseDTO;
 import br.com.restaurante.gestao_restaurante.dto.mesa.MesaUpdateNumeroDTO;
@@ -22,8 +23,14 @@ public class MesaService {
     @Autowired
     private MesaMapper mesaMapper;
 
+
+    protected Mesa findById(Long id){
+        return mesaRepository.findById(id)
+            .orElseThrow(() -> new EntityNotFoundException("Mesa não encontrada com o ID: " + id));
+    }
+
     public MesaResponseDTO findByIdMesa(Long id) {
-        Mesa mesa = mesaRepository.findById(id).orElse(null);
+        Mesa mesa = this.findById(id);
         return mesaMapper.toResponseDTO(mesa);
     }
     
@@ -48,10 +55,7 @@ public class MesaService {
     }
 
     public MesaResponseDTO atualizarStatusMesa(Long id, MesaUpdateStatusDTO mesaAtualizada) {
-        Mesa mesaExistente = mesaRepository.findById(id).orElse(null);
-        if (mesaExistente == null) {
-            throw new RuntimeException("Mesa não encontrada com o ID: " + id);
-        }
+        Mesa mesaExistente = this.findById(id);
 
         if (mesaAtualizada.getStatus() != null) {
             mesaExistente.setStatus(mesaAtualizada.getStatus());
@@ -62,10 +66,7 @@ public class MesaService {
     }
 
     public MesaResponseDTO atualizarNumeroMesa(Long id, MesaUpdateNumeroDTO mesaAtualizada) {
-        Mesa mesaExistente = mesaRepository.findById(id).orElse(null);
-        if (mesaExistente == null) {
-            throw new RuntimeException("Mesa não encontrada com o ID: " + id);
-        }
+        Mesa mesaExistente = this.findById(id);
 
         mesaRepository.findByNumero(mesaAtualizada.getNumero()).ifPresent(m -> {
             if (!m.getId().equals(id)) {
@@ -78,11 +79,15 @@ public class MesaService {
         return mesaMapper.toResponseDTO(mesaSalva);
     }
 
+    public List<MesaResponseDTO> buscarMesaPorStatus(String status){
+        return mesaRepository.findByStatus(status)
+            .stream()
+            .map(pedidoMapper::toResponseDTO)
+            .toList();
+    }
+
     public void deletarMesa(Long id) {
-        Mesa mesaExistente = mesaRepository.findById(id).orElse(null);
-        if (mesaExistente == null) {
-            throw new RuntimeException("Mesa não encontrada com o ID: " + id);
-        }
+        Mesa mesaExistente = this.findById(id);
         if (!"LIVRE".equals(mesaExistente.getStatus())) {
             throw new RuntimeException("Erro: Apenas mesas com status 'LIVRE' podem ser deletadas.");
         }

@@ -10,6 +10,8 @@ import br.com.restaurante.gestao_restaurante.models.Mesa;
 @Repository
 public interface MesaRepository extends JpaRepository<Mesa, Long> {
 
-    Optional<Mesa> findByNumero(Integer numero);
+    Mesa findByNumero(Integer numero);
+
+    Optional<Mesa> findByStatus(String status);
     
 }
