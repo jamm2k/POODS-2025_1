@@ -17,6 +17,6 @@ public class Garcom extends Funcionario {
     private Double bonus;
 
     @OneToMany(mappedBy = "garcom")
-    private List<Mesa> mesas;
+    private List<Comanda> comandas;
     
 }

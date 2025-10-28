@@ -21,6 +21,7 @@ public class GarcomMapper {
         if(garcom.getDataAdmissao() == null){
             garcom.setDataAdmissao(LocalDate.now());
         }
+        garcom.setBonus(null);
 
         return garcom;
     }

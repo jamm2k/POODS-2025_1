@@ -4,11 +4,13 @@ import java.util.Collections;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import br.com.restaurante.gestao_restaurante.dto.cardapio.CardapioCreateDTO;
 import br.com.restaurante.gestao_restaurante.dto.cardapio.CardapioResponseDTO;
 import br.com.restaurante.gestao_restaurante.models.Cardapio;
 
+@Component
 public class CardapioMapper {
     
     @Autowired

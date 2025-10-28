@@ -91,7 +91,7 @@ public class ComandaService {
         comandaRepository.deleteById(id);
 
         Mesa mesa = comandaExistente.getMesa();
-        long comandasAbertas = comandaRepository.countbyMesaAndStatus(mesa, "Aberta");
+        Long comandasAbertas = comandaRepository.countByMesaAndStatus(mesa, "Aberta");
         
         if (comandasAbertas == 0) {
             mesa.setStatus("Livre");

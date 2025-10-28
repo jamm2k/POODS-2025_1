@@ -14,4 +14,5 @@ public class GarcomCreateDTO {
     private Double salario;
     private LocalDate dataAdmissao;
     private String matricula;
+    private Double bonus;
 }
