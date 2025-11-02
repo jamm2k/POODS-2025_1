@@ -10,13 +10,17 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.com.restaurante.gestao_restaurante.dto.comanda.ComandaCreateDTO;
 import br.com.restaurante.gestao_restaurante.dto.comanda.ComandaResponseDTO;
+import br.com.restaurante.gestao_restaurante.dto.pedido.PedidoResponseDTO;
 import br.com.restaurante.gestao_restaurante.services.ComandaService;
+import br.com.restaurante.gestao_restaurante.services.PedidoService;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 
 
@@ -26,6 +30,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 public class ComandaController {
     @Autowired
     ComandaService comandaService;
+
+    @Autowired
+    PedidoService pedidoService;
 
     @GetMapping
     public ResponseEntity<List<ComandaResponseDTO>> buscarTodasComandas() {
@@ -37,6 +44,12 @@ public class ComandaController {
         return ResponseEntity.ok(comandaService.findByIdComanda(id));
     }
 
+    @GetMapping("/{comandaId/pedidos}")
+    public ResponseEntity<List<PedidoResponseDTO>> buscarPedidosPorComanda(@PathVariable Long id) {
+        List<PedidoResponseDTO> pedidos = pedidoService.findPedidosPorComanda(id);
+        return ResponseEntity.ok(pedidos);
+    }
+    
     @PostMapping
     public ResponseEntity<ComandaResponseDTO> criarComanda(@RequestBody ComandaCreateDTO comandaDTO) {
         ComandaResponseDTO comandaCriada = comandaService.criarNovaComanda(comandaDTO);
@@ -48,4 +61,6 @@ public class ComandaController {
         comandaService.deletarComanda(id);
         return ResponseEntity.noContent().build();
     }
+
+
 }

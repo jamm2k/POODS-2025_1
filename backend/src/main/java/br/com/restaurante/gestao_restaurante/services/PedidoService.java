@@ -57,6 +57,16 @@ public class PedidoService {
             .toList();
     }
 
+    public List<PedidoResponseDTO> findPedidosPorComanda(Long comandaId) {
+        Comanda comanda = comandaRepository.findById(comandaId)
+            .orElseThrow(() -> new EntityNotFoundException("Comanda não encontrada com o ID: " + comandaId));
+
+        List<Pedido> pedidos = pedidoRepository.findByComanda(comanda);
+        return pedidos.stream()
+                .map(pedidoMapper::toResponseDTO)
+                .toList();
+    }
+
     public PedidoResponseDTO criarNovoPedido(PedidoCreateDTO pedidoDTO) {
         Pedido pedido = pedidoMapper.toEntity(pedidoDTO);
         
