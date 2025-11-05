@@ -40,6 +40,9 @@ public class PedidoService {
     @Autowired
     private CozinheiroService cozinheiroService;
 
+    @Autowired
+    private ComandaService comandaService;
+
     private Pedido findById(Long id) {
         return pedidoRepository.findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Pedido não encontrado com o ID: " + id));
@@ -57,11 +60,21 @@ public class PedidoService {
             .toList();
     }
 
-    public List<PedidoResponseDTO> findPedidosPorComanda(Long comandaId) {
+    public List<PedidoResponseDTO> findPedidosByComanda(Long comandaId) {
         Comanda comanda = comandaRepository.findById(comandaId)
             .orElseThrow(() -> new EntityNotFoundException("Comanda não encontrada com o ID: " + comandaId));
 
         List<Pedido> pedidos = pedidoRepository.findByComanda(comanda);
+        return pedidos.stream()
+                .map(pedidoMapper::toResponseDTO)
+                .toList();
+    }
+
+    public List<PedidoResponseDTO> findPedidosByGarcom(Long garcomId){
+        Garcom garcom = garcomRepository
+        .findById(garcomId).orElseThrow(() -> new EntityNotFoundException("Garcom não encontrado"));
+
+        List<Pedido> pedidos = pedidoRepository.findByGarcom(garcom);
         return pedidos.stream()
                 .map(pedidoMapper::toResponseDTO)
                 .toList();
@@ -89,24 +102,13 @@ public class PedidoService {
         pedido.setCozinheiro(null);
         pedido.setStatus("SOLICITADO");
 
-        atualizarValorTotalComanda(comanda);
+        comandaService.atualizarValorTotalComanda(comanda);
 
         Pedido pedidoSalvo = pedidoRepository.save(pedido);
         return pedidoMapper.toResponseDTO(pedidoSalvo);
     }
 
-    private void atualizarValorTotalComanda(Comanda comanda) {
-        List<Pedido> pedidos = pedidoRepository.findByComanda(comanda);
-
-        Double valorTotal = 0.0;
-        for (Pedido p : pedidos) {
-            if (p.getItem() != null && p.getQuantidade() != null) {
-                valorTotal += p.getItem().getPreco() * p.getQuantidade();
-            }
-        }
-        comanda.setValorTotal(valorTotal);
-        comandaRepository.save(comanda);
-    }
+    
     
     public PedidoResponseDTO atualizarPedido (Long id, PedidoUpdateDTO pedidoDTO) {
         Pedido pedidoExistente = this.findById(id);
@@ -120,7 +122,7 @@ public class PedidoService {
                 pedidoExistente.setQuantidade(pedidoDTO.getQuantidade());
             }
         }
-        atualizarValorTotalComanda(comanda);
+        comandaService.atualizarValorTotalComanda(comanda);
         
 
         Pedido pedidoSalvo = pedidoRepository.save(pedidoExistente);
@@ -200,12 +202,13 @@ public class PedidoService {
             .toList();
     }
 
+
     public void deletarPedido (Long id){
         Pedido pedidoExistente = this.findById(id);
         pedidoRepository.delete(pedidoExistente);
 
         Comanda comanda = pedidoExistente.getComanda();
-        atualizarValorTotalComanda(comanda);
+        comandaService.atualizarValorTotalComanda(comanda);
     }
 
 }

@@ -14,5 +14,6 @@ public interface ComandaRepository  extends JpaRepository<Comanda, Long> {
     Optional<Comanda> findByNome(String nome);
     Optional<Comanda> findByMesaAndNome(Mesa mesa, String nome);
     Long countByMesaAndStatus(Mesa mesa, String string);
+    Optional<Comanda> findByMesa(Mesa mesa);
     
 }

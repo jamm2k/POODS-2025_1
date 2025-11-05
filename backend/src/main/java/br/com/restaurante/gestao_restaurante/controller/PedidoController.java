@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import br.com.restaurante.gestao_restaurante.dto.pedido.PedidoCreateDTO;
 import br.com.restaurante.gestao_restaurante.dto.pedido.PedidoResponseDTO;
 import br.com.restaurante.gestao_restaurante.dto.pedido.PedidoUpdateDTO;
+import br.com.restaurante.gestao_restaurante.dto.pedido.PedidoUpdateStatusDTO;
 import br.com.restaurante.gestao_restaurante.services.PedidoService;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -19,6 +20,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 
 
@@ -30,8 +33,28 @@ public class PedidoController {
     PedidoService pedidoService;
     
     @GetMapping
-    public ResponseEntity<List<PedidoResponseDTO>> buscarTodosPedidos() {
-        return ResponseEntity.ok(pedidoService.findAllPedidos());
+    public ResponseEntity<List<PedidoResponseDTO>> buscarTodosPedidos(
+        @RequestParam(required = false) String status, 
+        @RequestParam(required = false) Long comandaId,
+        @RequestParam(required = false) Long garcomId
+    ) {
+            
+        List<PedidoResponseDTO> pedidos;
+
+        if (status != null && !status.isEmpty()){
+            pedidos = pedidoService.buscarPedidoPorStatus(status);
+        }else{
+            pedidos = pedidoService.findAllPedidos();
+        }
+
+        if (comandaId != null){
+            pedidos = pedidoService.findPedidosByComanda(comandaId);
+        }
+
+        if(garcomId != null){
+            pedidos = pedidoService.findPedidosByGarcom(garcomId);
+        }
+        return ResponseEntity.ok(pedidos);
     }
     
     @GetMapping("/{id}")
@@ -49,6 +72,12 @@ public class PedidoController {
     @PutMapping("/{id}")
     public ResponseEntity<PedidoResponseDTO> atualizarPedido(@PathVariable Long id, @RequestBody PedidoUpdateDTO pedidoDTO) {
         PedidoResponseDTO pedidoAtualizado = pedidoService.atualizarPedido(id, pedidoDTO);
+        return ResponseEntity.ok(pedidoAtualizado);
+    }
+
+    @PutMapping("/{id}/status")
+    public ResponseEntity<PedidoResponseDTO> AtualizarStatusPedido(@PathVariable Long id, @RequestParam PedidoUpdateStatusDTO status) {
+        PedidoResponseDTO pedidoAtualizado = pedidoService.atualizarStatusPedido(id, status);        
         return ResponseEntity.ok(pedidoAtualizado);
     }
 

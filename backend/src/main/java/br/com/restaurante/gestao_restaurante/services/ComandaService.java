@@ -3,15 +3,20 @@ package br.com.restaurante.gestao_restaurante.services;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import br.com.restaurante.gestao_restaurante.dto.comanda.ComandaCreateDTO;
 import br.com.restaurante.gestao_restaurante.dto.comanda.ComandaResponseDTO;
-//import br.com.restaurante.gestao_restaurante.dto.comanda.ComandaUpdateDTO;
+import br.com.restaurante.gestao_restaurante.dto.comanda.ComandaUpdateStatusDTO;
+import br.com.restaurante.gestao_restaurante.dto.comanda.ComandaUpdateTaxaDTO;
 import br.com.restaurante.gestao_restaurante.models.Comanda;
 import br.com.restaurante.gestao_restaurante.models.Garcom;
 import br.com.restaurante.gestao_restaurante.models.Mesa;
+import br.com.restaurante.gestao_restaurante.models.Pedido;
 import br.com.restaurante.gestao_restaurante.repositories.MesaRepository;
+import br.com.restaurante.gestao_restaurante.repositories.PedidoRepository;
 import jakarta.persistence.EntityNotFoundException;
 import br.com.restaurante.gestao_restaurante.mapper.ComandaMapper;
 import br.com.restaurante.gestao_restaurante.repositories.ComandaRepository;
@@ -32,6 +37,9 @@ public class ComandaService {
     @Autowired
     private GarcomRepository garcomRepository;
 
+    @Autowired
+    private PedidoRepository pedidoRepository;
+
     private Comanda findById(Long id) {
         return comandaRepository.findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Comanda não encontrada com o ID: " + id));
@@ -42,13 +50,21 @@ public class ComandaService {
         Comanda comanda = this.findById(id);
         return comandaMapper.toResponseDTO(comanda);
     }
-
+    
     public List<ComandaResponseDTO> findAllComandas() {
         return comandaRepository.findAll()
-            .stream()
-            .map(comandaMapper::toResponseDTO)
-            .toList();
+        .stream()
+        .map(comandaMapper::toResponseDTO)
+        .toList();
     }
+    
+    public List<ComandaResponseDTO> findComandasByMesa(Long mesaId) {
+        Mesa mesa = mesaRepository.findById(mesaId).orElseThrow(()-> new EntityNotFoundException("Mesa não encontrada"));
+        return comandaRepository.findByMesa(mesa).stream()
+                .map(comandaMapper::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
     public ComandaResponseDTO criarNovaComanda(ComandaCreateDTO comandaDTO) {
        
         Mesa mesa = mesaRepository.findById(comandaDTO.getMesaId())
@@ -68,6 +84,7 @@ public class ComandaService {
         comanda.setStatus("Aberta");
         comanda.setDataAbertura(java.time.LocalDateTime.now());
         comanda.setValorTotal(0.0);
+        comanda.setTaxaServico(true);
 
         if (mesa.getStatus().equals("LIVRE")) {
             mesa.setStatus("Ocupada");
@@ -77,6 +94,52 @@ public class ComandaService {
         
         Comanda comandaSalva = comandaRepository.save(comanda);
         return comandaMapper.toResponseDTO(comandaSalva);
+    }
+
+    public ComandaResponseDTO atualizarStatusComanda (Long id, ComandaUpdateStatusDTO statusDTO){
+        Comanda comandaExistente = this.findById(id);
+
+        if (statusDTO.getStatus() == null || statusDTO.getStatus().isBlank()) {
+            throw new IllegalArgumentException("Status inválido.");
+        }
+
+        comandaExistente.setStatus(statusDTO.getStatus());
+
+        Comanda comandaAtualizada = comandaRepository.save(comandaExistente);
+        return comandaMapper.toResponseDTO(comandaAtualizada);
+    }
+
+    protected void atualizarValorTotalComanda(Comanda comanda) {
+        List<Pedido> pedidos = pedidoRepository.findByComanda(comanda);
+
+        Double subTotal = 0.0;
+        for (Pedido p : pedidos) {
+            if (p.getItem() != null && p.getQuantidade() != null) {
+                subTotal += p.getItem().getPreco() * p.getQuantidade();
+            }
+        }
+
+        Double valorTotalFinal;
+        if(comanda.isTaxaServico()){
+            valorTotalFinal = subTotal * 1.10;
+        }else{
+            valorTotalFinal = subTotal;
+        }
+        comanda.setValorTotal(valorTotalFinal);
+        comandaRepository.save(comanda);
+    }
+
+    public ComandaResponseDTO atualizarTaxaServico(Long id, ComandaUpdateTaxaDTO updateTaxaDTO){
+        Comanda comanda = this.findById(id);
+
+        if(comanda.isTaxaServico() == updateTaxaDTO.isTaxaServico()){
+            return comandaMapper.toResponseDTO(comanda);
+        }
+
+        comanda.setTaxaServico(updateTaxaDTO.isTaxaServico());
+
+        this.atualizarValorTotalComanda(comanda);
+        return comandaMapper.toResponseDTO(comanda);
     }
 
    
@@ -98,5 +161,6 @@ public class ComandaService {
             mesaRepository.save(mesa);
         }
     }
+
 
 }

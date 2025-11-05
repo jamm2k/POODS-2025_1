@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.com.restaurante.gestao_restaurante.dto.comanda.ComandaCreateDTO;
 import br.com.restaurante.gestao_restaurante.dto.comanda.ComandaResponseDTO;
+import br.com.restaurante.gestao_restaurante.dto.comanda.ComandaUpdateStatusDTO;
+import br.com.restaurante.gestao_restaurante.dto.comanda.ComandaUpdateTaxaDTO;
 import br.com.restaurante.gestao_restaurante.dto.pedido.PedidoResponseDTO;
 import br.com.restaurante.gestao_restaurante.services.ComandaService;
 import br.com.restaurante.gestao_restaurante.services.PedidoService;
@@ -20,6 +22,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PutMapping;
+
 
 
 
@@ -35,7 +39,11 @@ public class ComandaController {
     PedidoService pedidoService;
 
     @GetMapping
-    public ResponseEntity<List<ComandaResponseDTO>> buscarTodasComandas() {
+    public ResponseEntity<List<ComandaResponseDTO>> buscarTodasComandas(@RequestParam(required = false) Long mesaId) {
+        if(mesaId != null){
+            return ResponseEntity.ok(comandaService.findComandasByMesa(mesaId));
+        }
+        
         return ResponseEntity.ok(comandaService.findAllComandas());
     }
     
@@ -44,9 +52,9 @@ public class ComandaController {
         return ResponseEntity.ok(comandaService.findByIdComanda(id));
     }
 
-    @GetMapping("/{comandaId/pedidos}")
+    @GetMapping("/{id}/pedidos")
     public ResponseEntity<List<PedidoResponseDTO>> buscarPedidosPorComanda(@PathVariable Long id) {
-        List<PedidoResponseDTO> pedidos = pedidoService.findPedidosPorComanda(id);
+        List<PedidoResponseDTO> pedidos = pedidoService.findPedidosByComanda(id);
         return ResponseEntity.ok(pedidos);
     }
     
@@ -54,6 +62,20 @@ public class ComandaController {
     public ResponseEntity<ComandaResponseDTO> criarComanda(@RequestBody ComandaCreateDTO comandaDTO) {
         ComandaResponseDTO comandaCriada = comandaService.criarNovaComanda(comandaDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(comandaCriada);
+    }
+
+    @PutMapping("/{id}/status")
+    public ResponseEntity<ComandaResponseDTO> atualizarStatusComanda(@PathVariable Long id, @RequestBody ComandaUpdateStatusDTO statusDTO) {
+        ComandaResponseDTO comandaAtualizada = comandaService.atualizarStatusComanda(id, statusDTO);
+        return ResponseEntity.ok(comandaAtualizada);
+    }
+
+    @PutMapping("/{id}/taxa-servico")
+    public ResponseEntity<ComandaResponseDTO> atualizarTaxa(@PathVariable Long id, @RequestBody ComandaUpdateTaxaDTO taxaDTO) {
+        ComandaResponseDTO comanda = comandaService.atualizarTaxaServico(id,taxaDTO);
+
+        return ResponseEntity.ok(comanda
+        );
     }
     
     @DeleteMapping("/{id}")
