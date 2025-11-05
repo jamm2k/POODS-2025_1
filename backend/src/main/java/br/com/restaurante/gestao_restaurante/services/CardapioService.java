@@ -18,9 +18,10 @@ import br.com.restaurante.gestao_restaurante.mapper.CardapioMapper;
 public class CardapioService {
 
     @Autowired
-    CardapioRepository cardapioRepository;
+    private CardapioRepository cardapioRepository;
+
     @Autowired
-    CardapioMapper cardapioMapper;
+    private CardapioMapper cardapioMapper;
 
     private Cardapio findById(Long id){
         return cardapioRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Cardapio não encontrado: " 
@@ -36,6 +37,12 @@ public class CardapioService {
         return cardapioRepository.findAll().stream()
                 .map(cardapioMapper::toResponseDTO)
                 .collect(Collectors.toList());
+    }
+
+    public CardapioResponseDTO findByNomeCardapio(String nome){
+        Cardapio cardapio = cardapioRepository.findByNome(nome)
+                .orElseThrow(() -> new EntityNotFoundException("Cardapio não encontrado: " + nome));
+        return cardapioMapper.toResponseDTO(cardapio);
     }
 
     public CardapioResponseDTO criarCardapio(CardapioCreateDTO cardapioCreateDTO){
