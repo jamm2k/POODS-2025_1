@@ -4,6 +4,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -30,28 +31,33 @@ public class GarcomController {
     GarcomService garcomService;
     
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<GarcomResponseDTO>> buscarTodosGarcons() {
         return ResponseEntity.ok(garcomService.findAllGarcons());
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<GarcomResponseDTO> buscarGarcomPorId(@PathVariable Long id) {
         return ResponseEntity.ok(garcomService.findByIdGarcom(id));
     }
     
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<GarcomResponseDTO> criarGarcom(@RequestBody GarcomCreateDTO garcomDTO) {
         GarcomResponseDTO garcomSalvo = garcomService.criarNovoGarcom(garcomDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(garcomSalvo);
     }
     
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<GarcomResponseDTO> atualizarGarcom(@PathVariable Long id, @RequestBody GarcomUpdateDTO garcomDTO) {
         GarcomResponseDTO garcomAtualizado = garcomService.atualizarGarcom(id, garcomDTO);
         return ResponseEntity.ok(garcomAtualizado);
     }
     
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deletarGarcom(@PathVariable Long id){
         garcomService.deletarGarcom(id);
         return ResponseEntity.noContent().build();

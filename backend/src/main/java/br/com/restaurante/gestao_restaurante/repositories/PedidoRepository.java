@@ -2,10 +2,13 @@ package br.com.restaurante.gestao_restaurante.repositories;
 
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import br.com.restaurante.gestao_restaurante.models.Comanda;
 import br.com.restaurante.gestao_restaurante.models.Garcom;
@@ -19,5 +22,16 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
     Optional<Pedido> findByStatus(String status);
 
     List<Pedido> findByGarcom(Garcom garcom);
+        
+    @Query("SELECT SUM(p.item.preco * p.quantidade)" +
+           "FROM Pedido p " + 
+           "wHERE p.garcomVendedor = :garcom" +
+           "AND p.item.categoria = 'PREMIUM'" +
+           "AND p.comanda.dataAbertura BETWEEN :inicioMes AND :fimMes")
+    Double sumVendasPremiumByGarcomAndData(
+        @Param("garcom") Garcom garcom,
+        @Param("inicioMes") LocalDateTime inicioMes,
+        @Param("fimMes") LocalDateTime fimMes
+    );
     
 }

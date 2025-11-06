@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -30,22 +31,26 @@ public class CozinheiroController {
     CozinheiroService cozinheiroService;
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<CozinheiroResponseDTO>> buscarTodosCozinheiros() {
         return ResponseEntity.ok(cozinheiroService.findAllCozinheiros());
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CozinheiroResponseDTO> buscarCozinheiroPorId(@PathVariable Long id) {
         return ResponseEntity.ok(cozinheiroService.findByIdCozinheiro(id));
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CozinheiroResponseDTO> criarCozinheiro(@RequestBody CozinheiroCreateDTO cozinheiroDTO) {
         CozinheiroResponseDTO cozinheiroSalvo = cozinheiroService.criarCozinheiro(cozinheiroDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(cozinheiroSalvo);
     }
     
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CozinheiroResponseDTO> atualizarCozinheiro(@PathVariable Long id, @RequestBody CozinheiroUpdateDTO cozinheiroDTO) {        
         CozinheiroResponseDTO cozinheiroAtualizado = cozinheiroService.atualizarCozinheiro(id, cozinheiroDTO);
         return ResponseEntity.ok(cozinheiroAtualizado);
@@ -58,6 +63,7 @@ public class CozinheiroController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deletarCozinheiro(@PathVariable Long id){
        cozinheiroService.deletarCozinheiro(id);
        return ResponseEntity.noContent().build();

@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import br.com.restaurante.gestao_restaurante.dto.mesa.MesaCreateDTO;
@@ -25,12 +26,14 @@ public class MesaController {
     private MesaService mesaService;
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN') or hasRole('GARCOM')")
     public ResponseEntity<List<MesaResponseDTO>> buscarMesas(){
         List<MesaResponseDTO> mesas = mesaService.findAllMesas();
         return ResponseEntity.ok(mesas);
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('GARCOM')")
     public ResponseEntity<MesaResponseDTO> buscarMesaPorId(@PathVariable Long id) {
         MesaResponseDTO mesa = mesaService.findByIdMesa(id);
         return ResponseEntity.ok(mesa);
@@ -38,6 +41,7 @@ public class MesaController {
     
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<MesaResponseDTO> criarMesa(@RequestBody MesaCreateDTO mesaDTO) {
         MesaResponseDTO mesaSalva = mesaService.criarNovaMesa(mesaDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(mesaSalva);
@@ -51,12 +55,14 @@ public class MesaController {
     }
     
     @PutMapping("/{id}/numero")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<MesaResponseDTO> atualizarNumeroMesa(@PathVariable Long id, @RequestBody MesaUpdateNumeroDTO numeroDTO) {
         MesaResponseDTO mesaAtualizada = mesaService.atualizarNumeroMesa(id, numeroDTO);        
         return ResponseEntity.ok(mesaAtualizada);
     }
     
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deletarMesa(@PathVariable Long id){
         mesaService.deletarMesa(id);
         return ResponseEntity.noContent().build();

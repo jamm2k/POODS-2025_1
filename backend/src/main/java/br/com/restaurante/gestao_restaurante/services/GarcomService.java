@@ -2,16 +2,20 @@ package br.com.restaurante.gestao_restaurante.services;
 
 import org.springframework.stereotype.Service;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import br.com.restaurante.gestao_restaurante.repositories.FuncionarioRepository;
 import br.com.restaurante.gestao_restaurante.repositories.GarcomRepository;
+import br.com.restaurante.gestao_restaurante.repositories.PedidoRepository;
 import br.com.restaurante.gestao_restaurante.repositories.UsuarioRepository;
 import br.com.restaurante.gestao_restaurante.dto.garcom.GarcomCreateDTO;
 import br.com.restaurante.gestao_restaurante.dto.garcom.GarcomResponseDTO;
 import br.com.restaurante.gestao_restaurante.dto.garcom.GarcomUpdateDTO;
+import br.com.restaurante.gestao_restaurante.dto.relatorio.RelatorioGarcomDTO;
 import br.com.restaurante.gestao_restaurante.mapper.GarcomMapper;
 import br.com.restaurante.gestao_restaurante.models.Garcom;
 
@@ -29,7 +33,10 @@ public class GarcomService {
     
     @Autowired
     private GarcomMapper garcomMapper;
-    
+
+    @Autowired
+    private PedidoRepository pedidoRepository;
+
     @Autowired
     private PasswordEncoder passwordEncoder;
     
@@ -98,6 +105,37 @@ public class GarcomService {
         return garcomMapper.toResponseDTO(garcomSalvo);
         }
     
+
+    public RelatorioGarcomDTO gerarRelatorioBonusMensal(Long garcomId, int ano, int mes){
+        Garcom garcom = this.findById(garcomId);
+
+        LocalDateTime inicioMes = YearMonth.of(ano, mes).atDay(1).atStartOfDay();
+        LocalDateTime fimMes = YearMonth.of(ano, mes).atEndOfMonth().atTime(23,59,59);
+
+        Double totalPremium = pedidoRepository.sumVendasPremiumByGarcomAndData(
+            garcom,
+            inicioMes,
+            fimMes
+        );
+
+        if(totalPremium == null){
+            totalPremium = 0.0;
+        }
+
+        Double bonusCalculado = totalPremium * 0.10;
+
+        RelatorioGarcomDTO relatorio = new RelatorioGarcomDTO();
+        relatorio.setIdGarcom(garcom.getId());
+        relatorio.setNomeGarcom(garcom.getNome());
+        relatorio.setMatricula(garcom.getMatricula());
+        relatorio.setMes(mes);
+        relatorio.setAno(ano);
+        relatorio.setTotalVendasPremium(totalPremium);
+        relatorio.setBonusCalculado(bonusCalculado);
+
+        return relatorio;
+        
+    }
 
     public void deletarGarcom(Long id) {
         Garcom garcomExistente = garcomRepository.findById(id).orElse(null);

@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -40,18 +41,21 @@ public class CardapioController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity <CardapioResponseDTO> criarCardapio(@RequestBody CardapioCreateDTO cardapioDTO) {
         CardapioResponseDTO cardapioNovo = cardapioService.criarCardapio(cardapioDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(cardapioNovo);
     }
     
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity <CardapioResponseDTO> atualizarCardapio(@PathVariable Long id, @RequestBody CardapioUpdateDTO cardapioDTO) {
         CardapioResponseDTO cardapioAtualizado = cardapioService.atualizarCardapio(id, cardapioDTO);        
         return ResponseEntity.ok(cardapioAtualizado);
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deletarCardapio(@PathVariable Long id){
         cardapioService.deleteCardapio(id);
         return ResponseEntity.noContent().build();
