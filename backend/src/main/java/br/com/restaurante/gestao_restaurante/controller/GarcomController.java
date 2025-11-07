@@ -5,13 +5,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.restaurante.gestao_restaurante.dto.garcom.GarcomCreateDTO;
 import br.com.restaurante.gestao_restaurante.dto.garcom.GarcomResponseDTO;
 import br.com.restaurante.gestao_restaurante.dto.garcom.GarcomUpdateDTO;
+import br.com.restaurante.gestao_restaurante.dto.relatorio.RelatorioGarcomDTO;
+import br.com.restaurante.gestao_restaurante.security.UserDetailsImpl;
 import br.com.restaurante.gestao_restaurante.services.GarcomService;
+import io.micrometer.core.ipc.http.HttpSender.Response;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +23,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 
 
@@ -41,6 +47,36 @@ public class GarcomController {
     public ResponseEntity<GarcomResponseDTO> buscarGarcomPorId(@PathVariable Long id) {
         return ResponseEntity.ok(garcomService.findByIdGarcom(id));
     }
+
+    @GetMapping("/me")
+    @PreAuthorize("hasRole('GARCOM')") 
+    public ResponseEntity<GarcomResponseDTO> buscarMeuPerfil(Authentication authentication) { 
+        
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+
+        Long garcomIdLogado = userDetails.getId(); 
+
+        GarcomResponseDTO garcomDTO = garcomService.findByIdGarcom(garcomIdLogado);
+        
+        return ResponseEntity.ok(garcomDTO);
+    }
+
+    @GetMapping("/me/bonus")
+    public ResponseEntity<RelatorioGarcomDTO> buscarMeuBonus(
+            Authentication authentication,
+            @RequestParam int mes,
+            @RequestParam int ano
+    ) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+
+        Long garcomIdLogado = userDetails.getId(); 
+
+        RelatorioGarcomDTO relatorio = garcomService.gerarRelatorioBonusMensal(garcomIdLogado, mes, ano);
+        
+        return ResponseEntity.ok(relatorio);
+        
+    }
+    
     
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
