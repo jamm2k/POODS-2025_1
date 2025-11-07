@@ -13,7 +13,6 @@ import br.com.restaurante.gestao_restaurante.dto.pedido.PedidoResponseDTO;
 import br.com.restaurante.gestao_restaurante.dto.pedido.PedidoUpdateDTO;
 import br.com.restaurante.gestao_restaurante.dto.pedido.PedidoUpdateStatusDTO;
 import br.com.restaurante.gestao_restaurante.services.PedidoService;
-
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -79,6 +78,31 @@ public class PedidoController {
     public ResponseEntity<PedidoResponseDTO> AtualizarStatusPedido(@PathVariable Long id, @RequestParam PedidoUpdateStatusDTO status) {
         PedidoResponseDTO pedidoAtualizado = pedidoService.atualizarStatusPedido(id, status);        
         return ResponseEntity.ok(pedidoAtualizado);
+    }
+
+    @PutMapping("/api/{id}/atribuir-cozinheiro")
+    public ResponseEntity<PedidoResponseDTO> atribuirCozinheiro(
+            @PathVariable Long id, 
+            @RequestBody Long cozinheiroId
+    ) {
+        PedidoResponseDTO pedido = pedidoService.atribuirCozinheiro(id, cozinheiroId);        
+        return ResponseEntity.ok(pedido);
+    }
+
+    @PutMapping("api/{id}/concluir")
+    public ResponseEntity<PedidoResponseDTO> concluirPedido(
+        @PathVariable Long id,
+        @PathVariable Long cozinheiroId
+        ) {
+
+        PedidoResponseDTO pedido = pedidoService.concluirPedido(id, cozinheiroId);        
+        return ResponseEntity.ok(pedido);
+    }
+
+    @PutMapping("api/{id}/entregar")
+    public ResponseEntity<PedidoResponseDTO> entregarPedido(@PathVariable Long id) {
+        PedidoResponseDTO pedido = pedidoService.marcarPedidoEntregue(id);        
+        return ResponseEntity.ok(pedido);
     }
 
     @DeleteMapping("/{id}")
