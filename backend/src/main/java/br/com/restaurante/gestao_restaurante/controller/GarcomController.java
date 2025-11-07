@@ -12,10 +12,11 @@ import org.springframework.web.bind.annotation.RestController;
 import br.com.restaurante.gestao_restaurante.dto.garcom.GarcomCreateDTO;
 import br.com.restaurante.gestao_restaurante.dto.garcom.GarcomResponseDTO;
 import br.com.restaurante.gestao_restaurante.dto.garcom.GarcomUpdateDTO;
+import br.com.restaurante.gestao_restaurante.dto.pedido.PedidoResponseDTO;
 import br.com.restaurante.gestao_restaurante.dto.relatorio.RelatorioGarcomDTO;
 import br.com.restaurante.gestao_restaurante.security.UserDetailsImpl;
 import br.com.restaurante.gestao_restaurante.services.GarcomService;
-import io.micrometer.core.ipc.http.HttpSender.Response;
+import br.com.restaurante.gestao_restaurante.services.PedidoService;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,6 +36,9 @@ public class GarcomController {
 
     @Autowired
     GarcomService garcomService;
+
+    @Autowired
+    PedidoService pedidoService;
     
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
@@ -76,6 +80,21 @@ public class GarcomController {
         return ResponseEntity.ok(relatorio);
         
     }
+
+
+    @GetMapping("/me/pedidos")
+    public ResponseEntity <List<PedidoResponseDTO>> buscarMeusPratos(
+            Authentication authentication
+    ) {
+
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        Long garcomIdLogado = userDetails.getId();
+
+        List <PedidoResponseDTO> pedidos = pedidoService.findPedidosByGarcom(garcomIdLogado);
+
+        return ResponseEntity.ok(pedidos);
+    } 
+
     
     
     @PostMapping

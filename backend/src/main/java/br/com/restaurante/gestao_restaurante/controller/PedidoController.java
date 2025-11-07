@@ -48,11 +48,16 @@ public class PedidoController {
 
         if (comandaId != null){
             pedidos = pedidoService.findPedidosByComanda(comandaId);
+        }else{
+            pedidos = pedidoService.findAllPedidos();
         }
 
         if(garcomId != null){
             pedidos = pedidoService.findPedidosByGarcom(garcomId);
+        }else{
+            pedidos = pedidoService.findAllPedidos();
         }
+        
         return ResponseEntity.ok(pedidos);
     }
     

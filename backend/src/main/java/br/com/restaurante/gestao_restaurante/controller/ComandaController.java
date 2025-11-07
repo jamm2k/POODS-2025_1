@@ -39,7 +39,10 @@ public class ComandaController {
     PedidoService pedidoService;
 
     @GetMapping
-    public ResponseEntity<List<ComandaResponseDTO>> buscarTodasComandas(@RequestParam(required = false) Long mesaId) {
+    public ResponseEntity<List<ComandaResponseDTO>> buscarTodasComandas(
+        @RequestParam(required = false) Long mesaId
+    ) {
+
         if(mesaId != null){
             return ResponseEntity.ok(comandaService.findComandasByMesa(mesaId));
         }
@@ -74,8 +77,7 @@ public class ComandaController {
     public ResponseEntity<ComandaResponseDTO> atualizarTaxa(@PathVariable Long id, @RequestBody ComandaUpdateTaxaDTO taxaDTO) {
         ComandaResponseDTO comanda = comandaService.atualizarTaxaServico(id,taxaDTO);
 
-        return ResponseEntity.ok(comanda
-        );
+        return ResponseEntity.ok(comanda);
     }
     
     @DeleteMapping("/{id}")
