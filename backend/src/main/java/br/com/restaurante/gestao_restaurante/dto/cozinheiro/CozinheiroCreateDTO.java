@@ -6,6 +6,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class CozinheiroCreateDTO {
+    private Long cozinheiroId;
     private String nome;
     private String email;
     private String cpf;

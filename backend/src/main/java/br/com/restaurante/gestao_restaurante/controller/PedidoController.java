@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import br.com.restaurante.gestao_restaurante.dto.cozinheiro.CozinheiroCreateDTO;
 import br.com.restaurante.gestao_restaurante.dto.pedido.PedidoCreateDTO;
 import br.com.restaurante.gestao_restaurante.dto.pedido.PedidoResponseDTO;
 import br.com.restaurante.gestao_restaurante.dto.pedido.PedidoUpdateDTO;
@@ -85,26 +86,23 @@ public class PedidoController {
         return ResponseEntity.ok(pedidoAtualizado);
     }
 
-    @PutMapping("/api/{id}/atribuir-cozinheiro")
-    public ResponseEntity<PedidoResponseDTO> atribuirCozinheiro(
-            @PathVariable Long id, 
-            @RequestBody Long cozinheiroId
-    ) {
-        PedidoResponseDTO pedido = pedidoService.atribuirCozinheiro(id, cozinheiroId);        
+    @PutMapping("/{id}/atribuir-cozinheiro")
+    public ResponseEntity<PedidoResponseDTO> atribuirCozinheiro(@PathVariable Long id, @RequestBody CozinheiroCreateDTO dto) {
+        PedidoResponseDTO pedido = pedidoService.atribuirCozinheiro(id, dto.getCozinheiroId());
         return ResponseEntity.ok(pedido);
     }
 
-    @PutMapping("api/{id}/concluir")
-    public ResponseEntity<PedidoResponseDTO> concluirPedido(
-        @PathVariable Long id,
-        @PathVariable Long cozinheiroId
-        ) {
-
-        PedidoResponseDTO pedido = pedidoService.concluirPedido(id, cozinheiroId);        
+    @PutMapping("/{id}/concluir")
+    public ResponseEntity<PedidoResponseDTO> concluirPedido(@PathVariable Long id) {
+        PedidoResponseDTO pedidoAtual = pedidoService.findByIdPedido(id);
+        PedidoResponseDTO pedido = pedidoService.concluirPedido(
+            id, 
+            pedidoAtual.getCozinheiroId()
+        );
         return ResponseEntity.ok(pedido);
     }
 
-    @PutMapping("api/{id}/entregar")
+    @PutMapping("/{id}/entregar")
     public ResponseEntity<PedidoResponseDTO> entregarPedido(@PathVariable Long id) {
         PedidoResponseDTO pedido = pedidoService.marcarPedidoEntregue(id);        
         return ResponseEntity.ok(pedido);
