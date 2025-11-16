@@ -13,7 +13,6 @@ interface PrivateRouteProps {
 - redireciona p login se nao autenticado
 - redireciona para pagina nao autorizada se n tiver a role necessaria
 */
-
 export const PrivateRoute: React.FC<PrivateRouteProps> = ({ 
   children, 
   allowedRoles,
@@ -80,28 +79,13 @@ export const PublicRoute: React.FC<{
     );
   }
 
+  // se o usuário já está autenticado -> redireciona
   if (isAuthenticated) {
     return <Navigate to={redirectTo} replace />;
   }
 
+  // se n está autenticado -> renderiza o children (página de login)
   return <>{children}</>;
-};
-
-//hook para verificar permissoes em componentes
-export const usePermission = (allowedRoles?: UserRole[]) => {
-  const { user, hasRole, isAuthenticated } = useAuth();
-
-  const hasPermission = () => {
-    if (!isAuthenticated || !user) return false;
-    if (!allowedRoles || allowedRoles.length === 0) return true;
-    return hasRole(allowedRoles);
-  };
-
-  return {
-    hasPermission: hasPermission(),
-    user,
-    isAuthenticated,
-  };
 };
 
 export default PrivateRoute;

@@ -1,14 +1,29 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import api from '../services/api';
+import api from '../pages/services/api';
 
-// tipos de usuarios do sistema
-export type UserRole = 'CAIXA' | 'COZINHA' | 'BAR' | 'GARCOM' | 'ADMIN';
+export type UserRole = 'ADMIN' | 'GARCOM' | 'COZINHEIRO';
 
 export interface User {
   id: number;
-  name: string;
+  nome: string;
   email: string;
-  role: UserRole;
+  cpf: string;
+  tipoUsuario: UserRole;
+ 
+  matricula?: string;
+  dataAdmissao?: string;
+  salario?: number;
+  
+  bonus?: number; //bonus funcionario
+
+  status?: string; //cozinheiro
+
+  nivelAcesso?: number; //admin
+}
+
+interface LoginResponse {
+  token: string;
+  user: User;
 }
 
 interface AuthContextType {
@@ -29,7 +44,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Inicializa o estado do usuário a partir do localStorage
+  // inicializa o estado do usuário a partir do localStorage
   useEffect(() => {
     const initAuth = () => {
       try {
@@ -39,13 +54,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (storedToken && storedUser) {
           const parsedUser = JSON.parse(storedUser);
           
-          // Valida se o usuário tem os campos necessários
-          if (parsedUser?.id && parsedUser?.email && parsedUser?.role) {
+          if (parsedUser?.id && parsedUser?.email && parsedUser?.tipoUsuario) { //valida
             setToken(storedToken);
             setUser(parsedUser);
             api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
           } else {
-            // Remove dados inválidos
             localStorage.removeItem('token');
             localStorage.removeItem('user');
           }
@@ -62,7 +75,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initAuth();
   }, []);
 
-  // Atualiza o header Authorization quando o token muda
+  // atualiza o header Authorization quando o token muda
   useEffect(() => {
     if (token) {
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -73,34 +86,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string): Promise<User> => {
     try {
-      // Validações básicas antes de enviar
       if (!email || !password) {
         throw new Error('E-mail e senha são obrigatórios');
       }
 
-      const response = await api.post('/auth/login', { 
+      // chamada ao endpoint de login do backend
+      const response = await api.post<LoginResponse>('/api/auth/login', { 
         email: email.trim().toLowerCase(), 
-        password 
+        senha: password
       });
 
       const { token: newToken, user: newUser } = response.data;
 
-      // Valida resposta da API
-      if (!newToken || !newUser) {
-        throw new Error('Resposta inválida do servidor');
+      if (!newToken) {
+        throw new Error('Token não retornado pelo servidor');
       }
 
-      if (!newUser.id || !newUser.email || !newUser.role) {
+      if (!newUser || !newUser.id || !newUser.email || !newUser.tipoUsuario) {
         throw new Error('Dados de usuário incompletos');
       }
 
-      // Valida se o role é válido
-      const validRoles: UserRole[] = ['CAIXA', 'COZINHA', 'BAR', 'GARCOM', 'ADMIN'];
-      if (!validRoles.includes(newUser.role)) {
+      const validRoles: UserRole[] = ['ADMIN', 'GARCOM', 'COZINHEIRO'];
+      if (!validRoles.includes(newUser.tipoUsuario)) {
         throw new Error('Tipo de usuário inválido');
       }
 
-      // Atualiza estado e localStorage
       setUser(newUser);
       setToken(newToken);
 
@@ -111,13 +121,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       return newUser;
     } catch (error: any) {
-      // Limpa dados em caso de erro
       setUser(null);
       setToken(null);
       localStorage.removeItem('token');
       localStorage.removeItem('user');
 
-      // Tratamento de erros específicos
       if (error?.response?.status === 401) {
         throw new Error('E-mail ou senha incorretos');
       } else if (error?.response?.status === 403) {
@@ -133,7 +141,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = useCallback(() => {
-    // Limpa todos os dados de autenticação
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
@@ -145,21 +152,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return user;
   }, [user]);
 
-  // Verifica se o usuário tem uma role específica ou uma das roles fornecidas
   const hasRole = useCallback((roles: UserRole | UserRole[]): boolean => {
     if (!user) return false;
     
     const roleArray = Array.isArray(roles) ? roles : [roles];
-    return roleArray.includes(user.role);
+    return roleArray.includes(user.tipoUsuario);
   }, [user]);
 
-  // Interceptor para logout automático em caso de token inválido
+  // interceptor para logout automático - token invalido
   useEffect(() => {
     const interceptor = api.interceptors.response.use(
       (response) => response,
       (error) => {
         if (error?.response?.status === 401 && token) {
-          // Token expirado ou inválido
           logout();
         }
         return Promise.reject(error);
