@@ -1,30 +1,106 @@
-import { useState, PropsWithChildren } from 'react'
-//import reactLogo from './assets/react.svg'
-//import viteLogo from '/vite.svg'
-import './App.css'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import LoginPage from './pages/Auth/LoginPage';
-//import DashboardPage from './pages/DashboardPage';
+import { PrivateRoute, PublicRoute } from './components/PrivateRoute';
 
-const PrivateRoute = ({ children }: PropsWithChildren) => {
-  const { isAuthenticated } = useAuth();
-  return isAuthenticated ? children : <Navigate to="/login" />;
+import LoginPage from './pages/Auth/LoginPage';
+import DashboardGarcom from './pages/Garcom/DashboardGarcom';
+import DashboardCozinha from './pages/Cozinha/DashboardCozinha';
+import DashboardAdmin from './pages/Admin/DashboardAdmin';
+import UnauthorizedPage from './pages/UnauthorizedPage';
+import NotFoundPage from './pages/NotFoundPage';
+
+
+//componente de redirecionamento inteligente baseado no tipo de usuario
+const DashboardRedirect: React.FC = () => {
+  const { user } = useAuth();
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  //redirecionamentos
+  switch (user.tipoUsuario) {
+    case 'ADMIN':
+      return <Navigate to="/admin" replace />;
+    case 'GARCOM':
+      return <Navigate to="/garcom" replace />;
+    case 'COZINHEIRO':
+      return <Navigate to="/cozinha" replace />;
+    default:
+      return <Navigate to="/unauthorized" replace />;
+  }
 };
 
-function App() {
-  const [count, setCount] = useState(0)
-
+const App: React.FC = () => {
   return (
-     <AuthProvider>
-      <BrowserRouter>
+    <Router>
+      <AuthProvider>
         <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
-  );
-}
+          {/* rota publica */}
+          <Route
+            path="/login"
+            element={
+              <PublicRoute>
+                <LoginPage />
+              </PublicRoute>
+            }
+          />
 
-export default App
+          {/* rota raiz - redireciona baseado na autenticação */}
+          <Route
+            path="/"
+            element={
+              <PrivateRoute>
+                <DashboardRedirect />
+              </PrivateRoute>
+            }
+          />
+
+          {/* dashboard principal - redireciona baseado no tipo de usuário */}
+          <Route
+            path="/dashboard"
+            element={
+              <PrivateRoute>
+                <DashboardRedirect />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/garcom/*"
+            element={
+              <PrivateRoute allowedRoles={['GARCOM', 'ADMIN']}>
+                <DashboardGarcom />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/cozinha/*"
+            element={
+              <PrivateRoute allowedRoles={['COZINHEIRO', 'ADMIN']}>
+                <DashboardCozinha />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/admin/*"
+            element={
+              <PrivateRoute allowedRoles={['ADMIN']}>
+                <DashboardAdmin />
+              </PrivateRoute>
+            }
+          />
+
+          <Route path="/unauthorized" element={<UnauthorizedPage />} />
+
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </AuthProvider>
+    </Router>
+  );
+};
+
+export default App;
