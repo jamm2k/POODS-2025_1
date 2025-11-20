@@ -1,11 +1,28 @@
 import React, { useState } from 'react';
-import { Container, TextField, Button, Box, Typography, Alert, Paper, InputAdornment, IconButton, CircularProgress } from '@mui/material';
-import { Visibility, VisibilityOff, RestaurantMenu, Email, Lock } from '@mui/icons-material';
+import { 
+  Container, 
+  TextField, 
+  Button, 
+  Box, 
+  Typography, 
+  Alert, 
+  Paper, 
+  InputAdornment, 
+  IconButton, 
+  CircularProgress 
+} from '@mui/material';
+import { 
+  Visibility, 
+  VisibilityOff, 
+  RestaurantMenu, 
+  Email, 
+  Lock 
+} from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const LoginPage: React.FC = () => {
-  const { login } = useAuth();
+  const { login, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
@@ -39,8 +56,8 @@ const LoginPage: React.FC = () => {
       return;
     }
 
-    if (password.length < 6) {
-      setError('A senha deve ter no mínimo 6 caracteres.');
+    if (password.length < 3) {
+      setError('A senha deve ter no mínimo 3 caracteres.');
       return;
     }
 
@@ -50,22 +67,16 @@ const LoginPage: React.FC = () => {
     try {
       const user = await login(email, password);
       
-      // Redireciona baseado na role do usuário
-      switch (user.role) {
-        case 'CAIXA':
-          navigate('/caixa');
-          break;
-        case 'COZINHA':
-          navigate('/cozinha');
-          break;
-        case 'BAR':
-          navigate('/bar');
+      // redireciona baseado no tipo de usuário do banco
+      switch (user.tipoUsuario) {
+        case 'ADMIN':
+          navigate('/admin');
           break;
         case 'GARCOM':
           navigate('/garcom');
           break;
-        case 'ADMIN':
-          navigate('/admin');
+        case 'COZINHEIRO':
+          navigate('/cozinha');
           break;
         default:
           navigate('/dashboard');
@@ -77,37 +88,56 @@ const LoginPage: React.FC = () => {
     }
   };
 
+  if (authLoading) {
+    return (
+      <Box
+        sx={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'linear-gradient(135deg, #0d6869ff 0%, #0e4775ff 100%)',
+        }}
+      >
+        <CircularProgress size={60} sx={{ color: 'white' }} />
+      </Box>
+    );
+  }
+
   return (
     <Box
       sx={{
         position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'linear-gradient(135deg, #0d6869ff 0%, #0e4775ff 100%)',
-      overflow: 'hidden', // impede scrolls
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #0d6869ff 0%, #0e4775ff 100%)',
+        overflow: 'hidden',
       }}
     >
-       <Paper
+      <Paper
         elevation={12}
-      sx={{
-        p: { xs: 3, sm: 4 },
-        width: '100%',
-        maxWidth: 400,
-        borderRadius: 4,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 2.5,
-        background: '#FFFFFF',
-        boxShadow: '0 8px 30px rgba(0, 0, 0, 0.2)',
-        backdropFilter: 'blur(10px)',
+        sx={{
+          p: { xs: 3, sm: 4 },
+          width: '100%',
+          maxWidth: 400,
+          borderRadius: 4,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 2.5,
+          background: '#FFFFFF',
+          boxShadow: '0 8px 30px rgba(0, 0, 0, 0.2)',
+          backdropFilter: 'blur(10px)',
         }}
       >
-        {/* Logo e Título */}
         <Box sx={{ textAlign: 'center', mb: 1 }}>
           <Box
             sx={{
@@ -126,7 +156,7 @@ const LoginPage: React.FC = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
+                boxShadow: '0 4px 15px rgba(11, 93, 94, 0.4)',
               }}
             >
               <RestaurantMenu sx={{ fontSize: 40, color: 'white' }} />
@@ -153,7 +183,6 @@ const LoginPage: React.FC = () => {
 
         <Box sx={{ height: 1, background: 'linear-gradient(90deg, transparent, #e0e0e0, transparent)', my: 1 }} />
 
-        {/* Alert de Erro */}
         {error && (
           <Alert 
             severity="error" 
@@ -164,7 +193,6 @@ const LoginPage: React.FC = () => {
           </Alert>
         )}
 
-        {/* Formulário */}
         <Box
           component="form"
           onSubmit={handleSubmit}
@@ -180,6 +208,8 @@ const LoginPage: React.FC = () => {
             helperText={emailError ? 'E-mail inválido' : ''}
             fullWidth
             required
+            autoComplete="email"
+            autoFocus
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -202,6 +232,7 @@ const LoginPage: React.FC = () => {
             onChange={(e) => setPassword(e.target.value)}
             fullWidth
             required
+            autoComplete="current-password"
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -239,10 +270,10 @@ const LoginPage: React.FC = () => {
               fontSize: '1rem',
               fontWeight: 'bold',
               textTransform: 'none',
-              boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
+              boxShadow: '0 4px 15px rgba(11, 93, 94, 0.4)',
               '&:hover': {
-                background: 'linear-gradient(135deg, #5568d3 0%, #6a408b 100%)',
-                boxShadow: '0 6px 20px rgba(102, 126, 234, 0.6)',
+                background: 'linear-gradient(135deg, #094d4e 0%, #0c6464 100%)',
+                boxShadow: '0 6px 20px rgba(11, 93, 94, 0.6)',
               },
               '&:disabled': {
                 background: '#ccc',
@@ -260,16 +291,13 @@ const LoginPage: React.FC = () => {
           </Button>
         </Box>
 
-        {/* Informações adicionais */}
         <Box sx={{ mt: 2, pt: 2, borderTop: 1, borderColor: 'divider' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, flexWrap: 'wrap' }}>
-            <Typography variant="caption" color="text.secondary">Caixa</Typography>
+            <Typography variant="caption" color="text.secondary">Admin</Typography>
             <Typography variant="caption" color="text.secondary">•</Typography>
             <Typography variant="caption" color="text.secondary">Garçom</Typography>
             <Typography variant="caption" color="text.secondary">•</Typography>
-            <Typography variant="caption" color="text.secondary">Cozinha</Typography>
-            <Typography variant="caption" color="text.secondary">•</Typography>
-            <Typography variant="caption" color="text.secondary">Bar</Typography>
+            <Typography variant="caption" color="text.secondary">Cozinheiro</Typography>
           </Box>
         </Box>
       </Paper>
