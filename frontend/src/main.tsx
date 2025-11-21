@@ -14,13 +14,3 @@ createRoot(rootElement).render(
     <App />
   </StrictMode>,
 );
-
-export default function DebugApp() {
-  console.log('DebugApp montado');
-  return (
-    <div style={{ padding: 20 }}>
-      <h1>DebugApp</h1>
-      <p>Se isto aparecer, o problema está nas rotas / PrivateRoute / PublicRoute / AuthContext.</p>
-    </div>
-  );
-}

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import api from '../pages/services/api';
+import api from '../services/api';
 
 export type UserRole = 'ADMIN' | 'GARCOM' | 'COZINHEIRO';
 
@@ -9,11 +9,11 @@ export interface User {
   email: string;
   cpf: string;
   tipoUsuario: UserRole;
- 
+
   matricula?: string;
   dataAdmissao?: string;
   salario?: number;
-  
+
   bonus?: number; //bonus funcionario
 
   status?: string; //cozinheiro
@@ -46,14 +46,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // inicializa o estado do usuário a partir do localStorage
   useEffect(() => {
+
     const initAuth = () => {
+
+
       try {
         const storedToken = localStorage.getItem('token');
         const storedUser = localStorage.getItem('user');
 
         if (storedToken && storedUser) {
           const parsedUser = JSON.parse(storedUser);
-          
+
           if (parsedUser?.id && parsedUser?.email && parsedUser?.tipoUsuario) { //valida
             setToken(storedToken);
             setUser(parsedUser);
@@ -91,8 +94,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       // chamada ao endpoint de login do backend
-      const response = await api.post<LoginResponse>('/api/auth/login', { 
-        email: email.trim().toLowerCase(), 
+      const response = await api.post<LoginResponse>('/api/auth/login', {
+        email: email.trim().toLowerCase(),
         senha: password
       });
 
@@ -116,7 +119,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       localStorage.setItem('token', newToken);
       localStorage.setItem('user', JSON.stringify(newUser));
-      
+
       api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
 
       return newUser;
@@ -154,7 +157,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const hasRole = useCallback((roles: UserRole | UserRole[]): boolean => {
     if (!user) return false;
-    
     const roleArray = Array.isArray(roles) ? roles : [roles];
     return roleArray.includes(user.tipoUsuario);
   }, [user]);
@@ -196,10 +198,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  
+
   if (!context) {
     throw new Error('useAuth deve ser usado dentro de um AuthProvider');
   }
-  
+
   return context;
 };
