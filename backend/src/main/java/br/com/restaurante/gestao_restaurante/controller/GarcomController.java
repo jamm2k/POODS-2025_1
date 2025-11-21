@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 
 @RestController
-@RequestMapping("api/garcons")
+@RequestMapping("/api/garcons")
 public class GarcomController {
 
     @Autowired
