@@ -11,6 +11,7 @@ public class PedidoResponseDTO {
     private Long garcomId;
     private Long itemId;
     private Long cozinheiroId;
+    private Long barmanId;
     private Integer quantidade;
     private String obs;
     private String status;

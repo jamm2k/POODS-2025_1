@@ -92,12 +92,28 @@ public class PedidoController {
         return ResponseEntity.ok(pedido);
     }
 
+    @PutMapping("/{id}/atribuir-barman")
+    public ResponseEntity<PedidoResponseDTO> atribuirBarman(@PathVariable Long id, @RequestBody br.com.restaurante.gestao_restaurante.dto.barman.BarmanCreateDTO dto) {
+        PedidoResponseDTO pedido = pedidoService.atribuirBarman(id, dto.getBarmanId());
+        return ResponseEntity.ok(pedido);
+    }
+    
     @PutMapping("/{id}/concluir")
     public ResponseEntity<PedidoResponseDTO> concluirPedido(@PathVariable Long id) {
         PedidoResponseDTO pedidoAtual = pedidoService.findByIdPedido(id);
         PedidoResponseDTO pedido = pedidoService.concluirPedido(
             id, 
             pedidoAtual.getCozinheiroId()
+        );
+        return ResponseEntity.ok(pedido);
+    }
+
+    @PutMapping("/{id}/concluir-barman")
+    public ResponseEntity<PedidoResponseDTO> concluirPedidoBarman(@PathVariable Long id) {
+        PedidoResponseDTO pedidoAtual = pedidoService.findByIdPedido(id);
+        PedidoResponseDTO pedido = pedidoService.concluirPedidoBarman(
+            id, 
+            pedidoAtual.getBarmanId()
         );
         return ResponseEntity.ok(pedido);
     }

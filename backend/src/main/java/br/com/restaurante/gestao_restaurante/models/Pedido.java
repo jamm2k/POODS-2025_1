@@ -30,6 +30,10 @@ public class Pedido {
     @JoinColumn(name = "cozinheiro_id", nullable = true)
     private Cozinheiro cozinheiro;
 
+    @ManyToOne
+    @JoinColumn(name = "barman_id", nullable = true)
+    private Barman barman;
+
     @Column(nullable = false)
     private Integer quantidade;
 

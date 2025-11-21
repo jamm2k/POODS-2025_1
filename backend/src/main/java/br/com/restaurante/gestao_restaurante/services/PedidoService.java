@@ -41,6 +41,9 @@ public class PedidoService {
     private CozinheiroService cozinheiroService;
 
     @Autowired
+    private BarmanService barmanService;
+
+    @Autowired
     private ComandaService comandaService;
 
     private Pedido findById(Long id) {
@@ -100,6 +103,7 @@ public class PedidoService {
         pedido.setComanda(comanda);
         pedido.setItem(item);
         pedido.setCozinheiro(null);
+        pedido.setBarman(null);
         pedido.setStatus("SOLICITADO");
 
         comandaService.atualizarValorTotalComanda(comanda);
@@ -164,6 +168,31 @@ public class PedidoService {
         return this.atualizarStatusPedido(pedidoId, statusDTO);
     }
 
+    public PedidoResponseDTO atribuirBarman(Long pedidoId, Long barmanId){
+        br.com.restaurante.gestao_restaurante.models.Barman barman = barmanService.findById(barmanId);
+        Pedido pedido = this.findById(pedidoId);
+
+        PedidoUpdateStatusDTO statusDTO = new PedidoUpdateStatusDTO();
+        br.com.restaurante.gestao_restaurante.dto.barman.BarmanUpdateStatusDTO barmanStatusDTO = new br.com.restaurante.gestao_restaurante.dto.barman.BarmanUpdateStatusDTO();
+
+
+        if (pedido.getBarman() == null && "LIVRE".equals(barman.getStatus())) {
+            pedido.setBarman(barman);
+            pedidoRepository.save(pedido);
+            
+            statusDTO.setStatusPedido("EM PREPARO");
+            
+            barmanStatusDTO.setStatus("OCUPADO");
+            barmanService.alterarStatusBarman(barmanId, barmanStatusDTO);
+
+        }else{
+            if (pedido.getBarman() != null) throw new IllegalStateException("Pedido já atribuído a outro barman.");
+            if (!"LIVRE".equals(barman.getStatus())) throw new IllegalStateException("Barman não está livre.");
+        }       
+
+        return this.atualizarStatusPedido(pedidoId, statusDTO);
+    }
+
     public PedidoResponseDTO concluirPedido(Long pedidoId, Long cozinheiroId){
         Pedido pedido = this.findById(pedidoId);
 
@@ -176,6 +205,25 @@ public class PedidoService {
 
         cozinheiroStatusDTO.setStatus("LIVRE");
         cozinheiroService.alterarStatusCozinheiro(cozinheiroId, cozinheiroStatusDTO);
+
+        pedidoStatusDTO.setStatusPedido("PRONTO");
+        
+
+        return this.atualizarStatusPedido(pedidoId, pedidoStatusDTO);
+    }
+
+    public PedidoResponseDTO concluirPedidoBarman(Long pedidoId, Long barmanId){
+        Pedido pedido = this.findById(pedidoId);
+
+        br.com.restaurante.gestao_restaurante.dto.barman.BarmanUpdateStatusDTO barmanStatusDTO = new br.com.restaurante.gestao_restaurante.dto.barman.BarmanUpdateStatusDTO();
+        PedidoUpdateStatusDTO pedidoStatusDTO = new PedidoUpdateStatusDTO();
+
+        if(!"EM PREPARO".equals(pedido.getStatus())){
+            throw new IllegalStateException("Não se pode concluir pedidos antes do preparo.");
+        }
+
+        barmanStatusDTO.setStatus("LIVRE");
+        barmanService.alterarStatusBarman(barmanId, barmanStatusDTO);
 
         pedidoStatusDTO.setStatusPedido("PRONTO");
         

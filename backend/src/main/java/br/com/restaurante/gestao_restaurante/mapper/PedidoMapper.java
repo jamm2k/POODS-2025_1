@@ -17,11 +17,15 @@ public class PedidoMapper {
 
     public PedidoResponseDTO toResponseDTO(Pedido pedido) {
         PedidoResponseDTO dto = new PedidoResponseDTO();
-        dto.setGarcomId(pedido.getGarcom().getId());
+        dto.setId(pedido.getId());
+        dto.setGarcomId(pedido.getGarcom() != null ? pedido.getGarcom().getFuncionarioId() : null);
         dto.setComandaId(pedido.getComanda().getId());
         dto.setItemId(pedido.getItem().getId());
+        dto.setCozinheiroId(pedido.getCozinheiro() != null ? pedido.getCozinheiro().getId() : null);
+        dto.setBarmanId(pedido.getBarman() != null ? pedido.getBarman().getId() : null);
         dto.setQuantidade(pedido.getQuantidade());
         dto.setObs(pedido.getObs());
+        dto.setStatus(pedido.getStatus());
         return dto;
     }
 }
