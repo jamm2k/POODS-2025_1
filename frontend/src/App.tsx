@@ -7,6 +7,7 @@ import LoginPage from './pages/Auth/LoginPage';
 import DashboardGarcom from './pages/Garcom/DashboardGarcom';
 import DashboardCozinha from './pages/Cozinha/DashboardCozinha';
 import DashboardAdmin from './pages/Admin/DashboardAdmin';
+import DashboardBar from './pages/Bar/DashboardBar';
 import UnauthorizedPage from './pages/UnauthorizedPage';
 import NotFoundPage from './pages/NotFoundPage';
 
@@ -27,6 +28,8 @@ const DashboardRedirect: React.FC = () => {
       return <Navigate to="/garcom" replace />;
     case 'COZINHEIRO':
       return <Navigate to="/cozinha" replace />;
+    case 'BARMAN':
+      return <Navigate to="/bar" replace />;
     default:
       return <Navigate to="/unauthorized" replace />;
   }
@@ -86,6 +89,15 @@ const App: React.FC = () => {
           />
 
           <Route
+            path="/bar/*"
+            element={
+              <PrivateRoute allowedRoles={['BARMAN', 'ADMIN']}>
+                <DashboardBar />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
             path="/admin/*"
             element={
               <PrivateRoute allowedRoles={['ADMIN']}>
@@ -99,7 +111,7 @@ const App: React.FC = () => {
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </AuthProvider>
-    </Router>
+    </Router >
   );
 };
 

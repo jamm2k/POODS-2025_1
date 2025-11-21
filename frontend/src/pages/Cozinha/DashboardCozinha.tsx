@@ -245,7 +245,6 @@ const DashboardCozinha: React.FC = () => {
 
   return (
     <Box sx={{ flexGrow: 1, minHeight: '100vh', bgcolor: '#f5f5f5' }}>
-      {/* AppBar */}
       <AppBar
         position="sticky"
         sx={{

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
 
-export type UserRole = 'ADMIN' | 'GARCOM' | 'COZINHEIRO';
+export type UserRole = 'ADMIN' | 'GARCOM' | 'COZINHEIRO' | 'BARMAN';
 
 export interface User {
   id: number;
@@ -109,7 +109,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error('Dados de usuário incompletos');
       }
 
-      const validRoles: UserRole[] = ['ADMIN', 'GARCOM', 'COZINHEIRO'];
+      const validRoles: UserRole[] = ['ADMIN', 'GARCOM', 'COZINHEIRO', 'BARMAN'];
       if (!validRoles.includes(newUser.tipoUsuario)) {
         throw new Error('Tipo de usuário inválido');
       }
