@@ -10,4 +10,5 @@ public class ItemCreateDTO {
     private Double preco;
     private Long cardapioId;
     private String categoria;
+    private String tipo;
 }

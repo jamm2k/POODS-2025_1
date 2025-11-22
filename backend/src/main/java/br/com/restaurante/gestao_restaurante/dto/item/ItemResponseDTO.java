@@ -10,5 +10,6 @@ public class ItemResponseDTO {
     private String nome;
     private Double preco;
     private String categoria;
+    private String tipo;
     private Long cardapioId;
 }

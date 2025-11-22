@@ -14,6 +14,7 @@ public class ItemMapper {
         item.setNome(itemDTO.getNome());
         item.setPreco(itemDTO.getPreco());
         item.setCategoria(itemDTO.getCategoria());
+        item.setTipo(itemDTO.getTipo());
         return item;
     }
 
@@ -23,6 +24,7 @@ public class ItemMapper {
         dto.setNome(item.getNome());
         dto.setPreco(item.getPreco());
         dto.setCategoria(item.getCategoria());
+        dto.setTipo(item.getTipo());
         if (item.getCardapio() != null) {
             dto.setCardapioId(item.getCardapio().getId());
         }

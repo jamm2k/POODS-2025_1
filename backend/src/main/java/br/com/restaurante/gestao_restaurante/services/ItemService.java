@@ -36,16 +36,35 @@ public class ItemService {
     }
 
     public ItemResponseDTO criarNovoItem(ItemCreateDTO itemDTO) {
-
-        Cardapio cardapio = cardapioRepository.findById(itemDTO.getCardapioId())
-            .orElseThrow(() -> new RuntimeException("Cardápio não encontrado com o ID: " + itemDTO.getCardapioId()));
-        
         
         itemRepository.findByNome(itemDTO.getNome()).ifPresent(i -> {
             throw new RuntimeException("Erro: Nome do item já cadastrado.");
         }); 
 
+
+        String categoria = itemDTO.getCategoria();
+        if (categoria == null || categoria.trim().isEmpty()) {
+            categoria = "COMIDA";
+        }
+        
+        String tipo = itemDTO.getTipo();
+        if (tipo == null || tipo.trim().isEmpty()) {
+            tipo = "NORMAL";
+        }
+        
+        final String categoriaFinal = categoria;
+        final String tipoFinal = tipo;
+
+        Cardapio cardapio = cardapioRepository.findByNome(categoriaFinal)
+            .orElseGet(() -> { // se nao encontrar cardapio com nome categoria, cria um novo
+                Cardapio novoCardapio = new Cardapio();
+                novoCardapio.setNome(categoriaFinal);
+                return cardapioRepository.save(novoCardapio);
+            });
+
         Item item = itemMapper.toEntity(itemDTO);
+        item.setCategoria(categoriaFinal);
+        item.setTipo(tipoFinal);
         item.setCardapio(cardapio);
 
         Item itemSalvo = itemRepository.save(item);
@@ -68,6 +87,9 @@ public class ItemService {
         }
         if (itemUpdateDTO.getCategoria() != null) {
             itemExistente.setCategoria(itemUpdateDTO.getCategoria());
+        }
+        if (itemUpdateDTO.getTipo() != null) {
+            itemExistente.setTipo(itemUpdateDTO.getTipo());
         }
         if (itemUpdateDTO.getCardapioId() != null) {
             Cardapio cardapio = cardapioRepository.findById(itemUpdateDTO.getCardapioId())

@@ -22,6 +22,9 @@ public class Item {
     private String categoria;
 
     @Column(nullable = false)
+    private String tipo;
+
+    @Column(nullable = false)
     private Double preco;
 
     @ManyToOne

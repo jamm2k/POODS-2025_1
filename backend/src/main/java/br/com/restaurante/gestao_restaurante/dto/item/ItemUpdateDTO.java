@@ -10,4 +10,5 @@ public class ItemUpdateDTO {
     private String nome;
     private Double preco;
     private String categoria;
+    private String tipo;
 }
