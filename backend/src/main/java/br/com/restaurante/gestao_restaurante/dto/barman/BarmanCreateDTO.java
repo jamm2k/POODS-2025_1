@@ -10,6 +10,6 @@ public class BarmanCreateDTO {
     private String email;
     private String cpf;
     private String senha;
-    private BigDecimal salario;
+    private Double salario;
     private String matricula;
 }

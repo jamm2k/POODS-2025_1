@@ -18,7 +18,7 @@ public class PedidoMapper {
     public PedidoResponseDTO toResponseDTO(Pedido pedido) {
         PedidoResponseDTO dto = new PedidoResponseDTO();
         dto.setId(pedido.getId());
-        dto.setGarcomId(pedido.getGarcom() != null ? pedido.getGarcom().getFuncionarioId() : null);
+        dto.setGarcomId(pedido.getGarcom() != null ? pedido.getGarcom().getId() : null);
         dto.setComandaId(pedido.getComanda().getId());
         dto.setItemId(pedido.getItem().getId());
         dto.setCozinheiroId(pedido.getCozinheiro() != null ? pedido.getCozinheiro().getId() : null);

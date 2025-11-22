@@ -9,7 +9,7 @@ public class BarmanResponseDTO {
     private Long id;
     private String nome;
     private String matricula;
-    private BigDecimal salario;
+    private Double salario;
     private String email;
     private String status;
     private String tipoUsuario;

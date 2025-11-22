@@ -37,7 +37,7 @@ public class UserDetailsImpl implements UserDetails{
             return Collections.emptyList();
         }
 
-        return Collections.singletonList(new SimpleGrantedAuthority("ROLE" + usuario.getTipoUsuario()));
+        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + usuario.getTipoUsuario()));
     }
 
     @Override

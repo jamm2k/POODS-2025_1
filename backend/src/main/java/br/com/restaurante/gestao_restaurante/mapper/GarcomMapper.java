@@ -39,7 +39,7 @@ public class GarcomMapper {
                 dto.setDataAdmissao(garcom.getDataAdmissao());
                 dto.setMatricula(garcom.getMatricula());
                 dto.setSalario(garcom.getSalario());
-                dto.setBonus(garcom.getBonus());
+                dto.setBonus(garcom.getBonus() != null ? garcom.getBonus() : 0.0);
                 dto.setEmail(garcom.getEmail());
         return dto;
         

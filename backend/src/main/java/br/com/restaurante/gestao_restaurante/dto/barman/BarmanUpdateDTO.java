@@ -7,5 +7,5 @@ import java.math.BigDecimal;
 public class BarmanUpdateDTO {
     private String nome;
     private String email;
-    private BigDecimal salario;
+    private Double salario;
 }

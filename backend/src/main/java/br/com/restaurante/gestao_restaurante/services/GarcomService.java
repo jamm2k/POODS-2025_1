@@ -75,7 +75,8 @@ public class GarcomService {
         if(novoGarcom.getDataAdmissao() == null){
             novoGarcom.setDataAdmissao(LocalDate.now());
         }
-        novoGarcom.setBonus(null);
+        novoGarcom.setBonus(0.0);
+        novoGarcom.setTipoUsuario("GARCOM");
         novoGarcom.setSenha(passwordEncoder.encode(garcomDTO.getSenha()));
 
         Garcom garcomSalvo = garcomRepository.save(novoGarcom);
