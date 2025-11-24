@@ -1,13 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box,
-  Card,
-  CardContent,
   Typography,
-  Chip,
   IconButton,
-  Button,
-  Badge,
   AppBar,
   Toolbar,
   Menu,
@@ -18,22 +13,25 @@ import {
   DialogActions,
   List,
   ListItem,
-  ListItemText,
   Divider,
   Paper,
   CircularProgress,
+  Badge,
+  Button,
+  Chip,
+  Grid,
+  TextField,
 } from '@mui/material';
-import Grid from '@mui/material/Grid';
-
 import {
-  TableRestaurant,
-  AddCircle,
-  CheckCircle,
   Notifications,
   AccountCircle,
   Logout,
   Restaurant,
   AccessTime,
+  CheckCircle,
+  People,
+  AddCircle,
+  Receipt,
 } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -69,18 +67,27 @@ interface Pedido {
 const DashboardGarcom: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  
+
   const [mesas, setMesas] = useState<Mesa[]>([]);
   const [pedidosProntos, setPedidosProntos] = useState<Pedido[]>([]);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+  // Dialogs
   const [dialogPedidosOpen, setDialogPedidosOpen] = useState(false);
+  const [dialogAbrirComandaOpen, setDialogAbrirComandaOpen] = useState(false);
+  const [dialogMesaOcupadaOpen, setDialogMesaOcupadaOpen] = useState(false);
+
+  const [selectedMesa, setSelectedMesa] = useState<Mesa | null>(null);
+  const [nomeCliente, setNomeCliente] = useState('');
+
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const buscarMesas = async () => {
     try {
       const response = await api.get('/api/mesas');
-      setMesas(response.data);
+      const sortedMesas = response.data.sort((a: Mesa, b: Mesa) => a.numero - b.numero);
+      setMesas(sortedMesas);
     } catch (error) {
       console.error('Erro ao buscar mesas:', error);
     }
@@ -104,19 +111,19 @@ const DashboardGarcom: React.FC = () => {
     };
     carregarDados();
 
-    // atualizar pedidos prontos a cada 15 segundos
     const interval = setInterval(() => {
       buscarPedidosProntos();
+      buscarMesas();
     }, 15000);
 
     return () => clearInterval(interval);
   }, []);
 
-  // refresh manual
   const handleRefresh = async () => {
     setRefreshing(true);
     await Promise.all([buscarMesas(), buscarPedidosProntos()]);
     setRefreshing(false);
+    handleMenuClose();
   };
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -133,12 +140,37 @@ const DashboardGarcom: React.FC = () => {
   };
 
   const handleMesaClick = (mesa: Mesa) => {
+    setSelectedMesa(mesa);
     if (mesa.status === 'LIVRE') {
-      // redirecionar para abrir comanda
-      navigate(`/garcom/mesa/${mesa.id}/abrir-comanda`);
+      setNomeCliente('');
+      setDialogAbrirComandaOpen(true);
     } else if (mesa.status === 'OCUPADA') {
-      //redirecionar para ver/fazer pedidos
-      navigate(`/garcom/mesa/${mesa.id}/pedidos`);
+      setDialogMesaOcupadaOpen(true);
+    }
+  };
+
+  const handleAbrirComanda = async () => {
+    if (!selectedMesa || !user) return;
+
+    try {
+      await api.post('/api/comandas', {
+        nome: nomeCliente || `Mesa ${selectedMesa.numero}`,
+        mesaId: selectedMesa.id,
+        garcomId: user.id
+      });
+
+      setDialogAbrirComandaOpen(false);
+      await buscarMesas(); // Refresh status
+      alert('Comanda aberta com sucesso!');
+    } catch (error: any) {
+      console.error('Erro ao abrir comanda:', error);
+      if (error.response?.status === 403) {
+        alert('Erro 403: Sem permissão. Verifique se seu usuário é um Garçom e se o backend permite conexões externas (CORS).');
+      } else if (error.response?.status === 400) {
+        alert(`Erro: ${error.response.data}`);
+      } else {
+        alert('Erro ao abrir comanda. Tente novamente.');
+      }
     }
   };
 
@@ -148,84 +180,43 @@ const DashboardGarcom: React.FC = () => {
       await buscarPedidosProntos();
     } catch (error) {
       console.error('Erro ao marcar pedido como entregue:', error);
-      alert('Erro ao marcar pedido como entregue. Tente novamente.');
+      alert('Erro ao marcar pedido como entregue.');
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusStyles = (status: string) => {
     switch (status) {
-      case 'LIVRE':
-        return '#4CAF50';
-      case 'OCUPADA':
-        return '#FFA726';
-      case 'RESERVADA':
-        return '#EF5350';
-      default:
-        return '#9E9E9E';
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'LIVRE':
-        return 'Disponível';
-      case 'OCUPADA':
-        return 'Ocupada';
-      case 'RESERVADA':
-        return 'Reservada';
-      default:
-        return status;
+      case 'LIVRE': return { bgcolor: '#C8E6C9', color: '#1B5E20' };
+      case 'OCUPADA': return { bgcolor: '#FFCDD2', color: '#B71C1C' };
+      case 'RESERVADA': return { bgcolor: '#FFF9C4', color: '#F57F17' };
+      default: return { bgcolor: '#E0E0E0', color: '#616161' };
     }
   };
 
   if (loading) {
     return (
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '100vh',
-          background: 'linear-gradient(135deg, #0d6869ff 0%, #0e4775ff 100%)',
-        }}
-      >
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'linear-gradient(135deg, #0d6869ff 0%, #0e4775ff 100%)' }}>
         <CircularProgress size={60} sx={{ color: 'white', mb: 2 }} />
-        <Typography variant="h6" color="white">
-          Carregando dashboard...
-        </Typography>
+        <Typography variant="h6" color="white">Carregando...</Typography>
       </Box>
     );
   }
 
   return (
-    <Box sx={{ flexGrow: 1, minHeight: '100vh', bgcolor: '#f5f5f5' }}>
-      {/* AppBar */}
-      <AppBar
-        position="sticky"
-        sx={{
-          background: 'linear-gradient(135deg, #0B5D5E 0%, #0E7575 100%)',
-          boxShadow: '0 4px 15px rgba(11, 93, 94, 0.3)',
-        }}
-      >
+    <Box sx={{ flexGrow: 1, minHeight: '100vh', bgcolor: '#f0f2f5' }}>
+      <AppBar position="sticky" sx={{ background: 'linear-gradient(135deg, #004D40 0%, #00695C 100%)', boxShadow: 3 }}>
         <Toolbar>
-          <Restaurant sx={{ mr: 2, fontSize: 32 }} />
-          <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 'bold' }}>
-            Dashboard - Garçom
+          <Restaurant sx={{ mr: 1 }} />
+          <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 'bold', fontSize: '1.1rem' }}>
+            Garçom
           </Typography>
 
-          {/* botão de notificações */}
-          <IconButton
-            color="inherit"
-            onClick={() => setDialogPedidosOpen(true)}
-            sx={{ mr: 1 }}
-          >
+          <IconButton color="inherit" onClick={() => setDialogPedidosOpen(true)}>
             <Badge badgeContent={pedidosProntos.length} color="error">
               <Notifications />
             </Badge>
           </IconButton>
 
-          {/* menu do usuario */}
           <IconButton color="inherit" onClick={handleMenuOpen}>
             <AccountCircle />
           </IconButton>
@@ -234,394 +225,201 @@ const DashboardGarcom: React.FC = () => {
             anchorEl={anchorEl}
             open={Boolean(anchorEl)}
             onClose={handleMenuClose}
-            anchorOrigin={{
-              vertical: 'bottom',
-              horizontal: 'right',
-            }}
-            transformOrigin={{
-              vertical: 'top',
-              horizontal: 'right',
-            }}
           >
             <MenuItem disabled>
-              <Box>
-                <Typography variant="body2" fontWeight="bold">
-                  {user?.nome || 'Garçom'}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {user?.email}
-                </Typography>
-              </Box>
+              <Typography variant="body2">{user?.nome}</Typography>
             </MenuItem>
             <Divider />
             <MenuItem onClick={handleRefresh}>
-              <AccessTime sx={{ mr: 1 }} fontSize="small" />
-              Atualizar
+              <AccessTime sx={{ mr: 1 }} fontSize="small" /> Atualizar
             </MenuItem>
             <MenuItem onClick={handleLogout}>
-              <Logout sx={{ mr: 1 }} fontSize="small" />
-              Sair
+              <Logout sx={{ mr: 1 }} fontSize="small" /> Sair
             </MenuItem>
           </Menu>
         </Toolbar>
       </AppBar>
 
-      <Box sx={{ p: { xs: 2, sm: 3 } }}>
-        <Paper
-          elevation={3}
-          sx={{
-            p: 3,
-            mb: 3,
-            background: 'linear-gradient(135deg, #0B5D5E 0%, #0E7575 100%)',
-            color: 'white',
-            borderRadius: 3,
-          }}
-        >
-          <Typography variant="h5" fontWeight="bold" gutterBottom>
-            Bem-vindo, {user?.nome}!
-          </Typography>
-          <Typography variant="body1">
-            Selecione uma mesa para gerenciar comandas e pedidos
-          </Typography>
-          {pedidosProntos.length > 0 && (
-            <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Notifications />
-              <Typography variant="body2" fontWeight="bold">
-                Você tem {pedidosProntos.length} pedido(s) pronto(s) para
-                entregar!
-              </Typography>
-            </Box>
-          )}
-        </Paper>
-
-        <Paper sx={{ p: 2, mb: 3, borderRadius: 2 }}>
-          <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-            Legenda de Status:
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap', mt: 1 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Box
-                sx={{
-                  width: 24,
-                  height: 24,
-                  borderRadius: '50%',
-                  bgcolor: '#4CAF50',
-                  border: '2px solid #388E3C',
-                }}
-              />
-              <Typography variant="body2">Disponível</Typography>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Box
-                sx={{
-                  width: 24,
-                  height: 24,
-                  borderRadius: '50%',
-                  bgcolor: '#FFA726',
-                  border: '2px solid #F57C00',
-                }}
-              />
-              <Typography variant="body2">Ocupada</Typography>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Box
-                sx={{
-                  width: 24,
-                  height: 24,
-                  borderRadius: '50%',
-                  bgcolor: '#EF5350',
-                  border: '2px solid #C62828',
-                }}
-              />
-              <Typography variant="body2">Reservada</Typography>
-            </Box>
+      <Box sx={{ p: 2 }}>
+        <Box sx={{ display: 'flex', gap: 2, mb: 2, justifyContent: 'center' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Box sx={{ width: 16, height: 16, borderRadius: '50%', bgcolor: '#C8E6C9', border: '1px solid #1B5E20' }} />
+            <Typography variant="caption" fontWeight="bold" color="#1B5E20">Livre</Typography>
           </Box>
-        </Paper>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Box sx={{ width: 16, height: 16, borderRadius: '50%', bgcolor: '#FFCDD2', border: '1px solid #B71C1C' }} />
+            <Typography variant="caption" fontWeight="bold" color="#B71C1C">Ocupada</Typography>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Box sx={{ width: 16, height: 16, borderRadius: '50%', bgcolor: '#FFF9C4', border: '1px solid #F57F17' }} />
+            <Typography variant="caption" fontWeight="bold" color="#F57F17">Reservada</Typography>
+          </Box>
+        </Box>
 
-        {/* grid de mesas */}
-        <Grid container spacing={3}>
-          {mesas.map((mesa) => (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={mesa.id}>
-              <Card
-                sx={{
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  border: '3px solid',
-                  borderColor: getStatusColor(mesa.status),
-                  borderRadius: 3,
-                  height: '100%',
-                  '&:hover': {
-                    transform: 'translateY(-8px)',
-                    boxShadow: `0 12px 30px ${getStatusColor(mesa.status)}60`,
-                  },
-                }}
-                onClick={() => handleMesaClick(mesa)}
-              >
-                <CardContent>
+        <Grid container spacing={2}>
+          {mesas.map((mesa) => {
+            const styles = getStatusStyles(mesa.status);
+            return (
+              <Grid item xs={4} sm={3} md={2} key={mesa.id}>
+                <Paper
+                  elevation={3}
+                  onClick={() => handleMesaClick(mesa)}
+                  sx={{
+                    position: 'relative',
+                    paddingTop: '100%', // Aspect Ratio 1:1
+                    bgcolor: styles.bgcolor,
+                    color: styles.color,
+                    borderRadius: 3,
+                    cursor: 'pointer',
+                    transition: 'transform 0.1s',
+                    '&:active': { transform: 'scale(0.96)' },
+                    overflow: 'hidden',
+                    boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                    border: '1px solid rgba(0,0,0,0.1)'
+                  }}
+                >
                   <Box
                     sx={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
                       display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'flex-start',
-                      mb: 2,
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
                     }}
                   >
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <TableRestaurant
-                        sx={{
-                          fontSize: 48,
-                          color: getStatusColor(mesa.status),
-                        }}
-                      />
-                      <Typography
-                        variant="h3"
-                        fontWeight="bold"
-                        sx={{ color: getStatusColor(mesa.status) }}
-                      >
-                        {mesa.numero}
+                    <Typography variant="h4" fontWeight="bold">
+                      {mesa.numero}
+                    </Typography>
+
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        bottom: 8,
+                        right: 8,
+                        display: 'flex',
+                        alignItems: 'center',
+                        opacity: 0.9,
+                        bgcolor: 'rgba(0,0,0,0.6)',
+                        color: 'white',
+                        borderRadius: 1,
+                        px: 0.5,
+                        py: 0.2
+                      }}
+                    >
+                      <People sx={{ fontSize: 12, mr: 0.5 }} />
+                      <Typography variant="caption" fontWeight="bold" sx={{ fontSize: '0.75rem' }}>
+                        {mesa.capacidade || 4}
                       </Typography>
                     </Box>
-
-                    <Chip
-                      label={getStatusLabel(mesa.status)}
-                      sx={{
-                        bgcolor: getStatusColor(mesa.status),
-                        color: 'white',
-                        fontWeight: 'bold',
-                        fontSize: '0.75rem',
-                      }}
-                    />
                   </Box>
-
-                  <Divider sx={{ my: 2 }} />
-
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      mb: 2,
-                    }}
-                  >
-                    <Typography variant="body2" color="text.secondary">
-                      Capacidade:
-                    </Typography>
-                    <Typography variant="body1" fontWeight="bold">
-                      {mesa.capacidade} pessoas
-                    </Typography>
-                  </Box>
-
-                  {mesa.status === 'LIVRE' && (
-                    <Button
-                      variant="contained"
-                      startIcon={<AddCircle />}
-                      fullWidth
-                      sx={{
-                        mt: 1,
-                        py: 1.2,
-                        background:
-                          'linear-gradient(135deg, #0B5D5E 0%, #0E7575 100%)',
-                        textTransform: 'none',
-                        fontWeight: 'bold',
-                        fontSize: '0.9rem',
-                        borderRadius: 2,
-                        '&:hover': {
-                          background:
-                            'linear-gradient(135deg, #094d4e 0%, #0c6464 100%)',
-                        },
-                      }}
-                    >
-                      Abrir Comanda
-                    </Button>
-                  )}
-
-                  {mesa.status === 'OCUPADA' && (
-                    <Button
-                      variant="outlined"
-                      startIcon={<Restaurant />}
-                      fullWidth
-                      sx={{
-                        mt: 1,
-                        py: 1.2,
-                        borderColor: '#0E7575',
-                        color: '#0E7575',
-                        textTransform: 'none',
-                        fontWeight: 'bold',
-                        fontSize: '0.9rem',
-                        borderRadius: 2,
-                        borderWidth: 2,
-                        '&:hover': {
-                          borderColor: '#0B5D5E',
-                          bgcolor: '#0B5D5E10',
-                          borderWidth: 2,
-                        },
-                      }}
-                    >
-                      Fazer Pedidos
-                    </Button>
-                  )}
-
-                  {mesa.status === 'RESERVADA' && (
-                    <Button
-                      variant="outlined"
-                      fullWidth
-                      disabled
-                      sx={{
-                        mt: 1,
-                        py: 1.2,
-                        textTransform: 'none',
-                        fontSize: '0.9rem',
-                        borderRadius: 2,
-                      }}
-                    >
-                      Reservada
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
+                </Paper>
+              </Grid>
+            );
+          })}
         </Grid>
 
         {mesas.length === 0 && (
-          <Paper
-            sx={{
-              p: 4,
-              textAlign: 'center',
-              borderRadius: 3,
-            }}
-          >
-            <Typography variant="h6" color="text.secondary" gutterBottom>
-              Nenhuma mesa cadastrada
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Aguarde o administrador cadastrar as mesas do restaurante.
-            </Typography>
-          </Paper>
+          <Box sx={{ textAlign: 'center', mt: 4, color: 'text.secondary' }}>
+            <Typography>Nenhuma mesa encontrada.</Typography>
+          </Box>
         )}
       </Box>
 
-      {/* dialog d pedidos prontos */}
+      <Dialog open={dialogAbrirComandaOpen} onClose={() => setDialogAbrirComandaOpen(false)} fullWidth maxWidth="xs">
+        <DialogTitle sx={{ bgcolor: '#1B5E20', color: 'white' }}>
+          Abrir Mesa {selectedMesa?.numero}
+        </DialogTitle>
+        <DialogContent sx={{ mt: 2 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2, mt: 1 }}>
+            Informe o nome do cliente (opcional) para abrir a comanda.
+          </Typography>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Nome do Cliente"
+            fullWidth
+            variant="outlined"
+            value={nomeCliente}
+            onChange={(e) => setNomeCliente(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={() => setDialogAbrirComandaOpen(false)} color="inherit">Cancelar</Button>
+          <Button
+            onClick={handleAbrirComanda}
+            variant="contained"
+            sx={{ bgcolor: '#1B5E20', '&:hover': { bgcolor: '#003300' } }}
+            startIcon={<AddCircle />}
+          >
+            Abrir Comanda
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={dialogMesaOcupadaOpen} onClose={() => setDialogMesaOcupadaOpen(false)} fullWidth maxWidth="xs">
+        <DialogTitle sx={{ bgcolor: '#B71C1C', color: 'white' }}>
+          Mesa {selectedMesa?.numero} (Ocupada)
+        </DialogTitle>
+        <DialogContent sx={{ mt: 2, textAlign: 'center', py: 4 }}>
+          <Receipt sx={{ fontSize: 60, color: '#B71C1C', mb: 2 }} />
+          <Typography variant="h6">Gerenciar Pedidos</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            Esta funcionalidade será implementada em breve.
+          </Typography>
+          <Button variant="outlined" color="error" onClick={() => setDialogMesaOcupadaOpen(false)}>
+            Fechar
+          </Button>
+        </DialogContent>
+      </Dialog>
+
       <Dialog
         open={dialogPedidosOpen}
         onClose={() => setDialogPedidosOpen(false)}
-        maxWidth="md"
         fullWidth
-        PaperProps={{
-          sx: { borderRadius: 3 },
-        }}
+        maxWidth="sm"
       >
-        <DialogTitle
-          sx={{
-            background: 'linear-gradient(135deg, #0B5D5E 0%, #0E7575 100%)',
-            color: 'white',
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Notifications />
-            <Typography variant="h6" fontWeight="bold">
-              Pedidos Prontos ({pedidosProntos.length})
-            </Typography>
-          </Box>
+        <DialogTitle sx={{ bgcolor: '#004D40', color: 'white' }}>
+          Pedidos Prontos
         </DialogTitle>
-        <DialogContent sx={{ mt: 2 }}>
+        <DialogContent sx={{ mt: 2, p: 0 }}>
           {pedidosProntos.length === 0 ? (
-            <Box sx={{ textAlign: 'center', py: 6 }}>
-              <CheckCircle sx={{ fontSize: 80, color: '#4CAF50', mb: 2 }} />
-              <Typography variant="h6" gutterBottom>
-                Tudo em dia!
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Nenhum pedido pronto aguardando entrega no momento.
-              </Typography>
+            <Box sx={{ p: 4, textAlign: 'center' }}>
+              <CheckCircle sx={{ fontSize: 60, color: '#4CAF50', mb: 2 }} />
+              <Typography>Todos os pedidos foram entregues!</Typography>
             </Box>
           ) : (
-            <List sx={{ width: '100%' }}>
-              {pedidosProntos.map((pedido, index) => (
+            <List>
+              {pedidosProntos.map((pedido) => (
                 <React.Fragment key={pedido.id}>
-                  <ListItem
-                    sx={{
-                      bgcolor: '#f8f9fa',
-                      borderRadius: 2,
-                      mb: 2,
-                      p: 2,
-                      border: '2px solid #e0e0e0',
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        flex: 1,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: 1,
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                        }}
-                      >
-                        <Typography variant="h6" fontWeight="bold">
-                          Mesa {pedido.comanda.mesa.numero}
-                        </Typography>
-                        <Chip
-                          label="PRONTO"
-                          color="success"
-                          size="small"
-                          sx={{ fontWeight: 'bold' }}
-                        />
-                      </Box>
-
-                      <Typography variant="body1" color="text.primary">
-                        {pedido.item.nome}
-                      </Typography>
-
-                      <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
-                        <Chip
-                          label={pedido.item.categoria}
-                          size="small"
-                          sx={{
-                            bgcolor: '#0B5D5E',
-                            color: 'white',
-                          }}
-                        />
-                        <Typography variant="body2" color="text.secondary">
-                          Quantidade: <strong>{pedido.quantidade}</strong>
-                        </Typography>
-                      </Box>
-
-                      <Button
-                        variant="contained"
-                        color="success"
-                        startIcon={<CheckCircle />}
-                        onClick={() => handleMarcarEntregue(pedido.id)}
-                        fullWidth
-                        sx={{
-                          mt: 2,
-                          textTransform: 'none',
-                          fontWeight: 'bold',
-                          py: 1,
-                        }}
-                      >
-                        Marcar como Servido
-                      </Button>
+                  <ListItem sx={{ flexDirection: 'column', alignItems: 'flex-start', py: 2 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', mb: 1 }}>
+                      <Typography fontWeight="bold">Mesa {pedido.comanda.mesa.numero}</Typography>
+                      <Chip label="PRONTO" color="success" size="small" />
                     </Box>
+                    <Typography variant="body1">{pedido.item.nome}</Typography>
+                    <Typography variant="body2" color="text.secondary">Qtd: {pedido.quantidade}</Typography>
+                    <Button
+                      variant="contained"
+                      color="success"
+                      fullWidth
+                      sx={{ mt: 2 }}
+                      onClick={() => handleMarcarEntregue(pedido.id)}
+                    >
+                      Entregar
+                    </Button>
                   </ListItem>
+                  <Divider />
                 </React.Fragment>
               ))}
             </List>
           )}
         </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
-          <Button
-            onClick={() => setDialogPedidosOpen(false)}
-            variant="outlined"
-            sx={{ textTransform: 'none' }}
-          >
-            Fechar
-          </Button>
+        <DialogActions>
+          <Button onClick={() => setDialogPedidosOpen(false)}>Fechar</Button>
         </DialogActions>
       </Dialog>
     </Box>
