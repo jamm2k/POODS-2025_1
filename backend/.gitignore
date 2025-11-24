@@ -12,3 +12,6 @@
 # local config
 application-local.properties
 .env
+
+# credenciais
+CREDENTIALS.md

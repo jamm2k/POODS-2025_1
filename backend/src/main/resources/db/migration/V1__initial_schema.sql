@@ -1,39 +1,19 @@
--- INIT.SQL - Database Initialization Script for Restaurant Management System
--- This script should be run by the 'fred' user in pgAdmin Query Tool
+-- V1: Initial Schema
 
--- Clean slate - drop all tables
-DROP TABLE IF EXISTS pedidos CASCADE;
-DROP TABLE IF EXISTS comandas CASCADE;
-DROP TABLE IF EXISTS mesas CASCADE;
-DROP TABLE IF EXISTS admins CASCADE;
-DROP TABLE IF EXISTS itens CASCADE;
-DROP TABLE IF EXISTS barmen CASCADE;
-DROP TABLE IF EXISTS cozinheiros CASCADE;
-DROP TABLE IF EXISTS garcons CASCADE;
-DROP TABLE IF EXISTS funcionarios CASCADE;
-DROP TABLE IF EXISTS usuarios CASCADE;
-DROP TABLE IF EXISTS cardapios CASCADE;
-
--- Drop sequences
-DROP SEQUENCE IF EXISTS usuarios_id_seq CASCADE;
-DROP SEQUENCE IF EXISTS mesas_id_seq CASCADE;
-DROP SEQUENCE IF EXISTS cardapios_id_seq CASCADE;
-DROP SEQUENCE IF EXISTS itens_id_seq CASCADE;
-DROP SEQUENCE IF EXISTS comandas_id_seq CASCADE;
-DROP SEQUENCE IF EXISTS pedidos_id_seq CASCADE;
+-- CREATE DATABASE restaurantedb OWNER fred;
 
 --
 -- Table: cardapios
 --
 
 CREATE TABLE cardapios (
-    id integer NOT NULL,
+    id bigint NOT NULL,
     nome character varying(255) NOT NULL,
     CONSTRAINT cardapios_pkey PRIMARY KEY (id)
 );
 
 CREATE SEQUENCE cardapios_id_seq
-    AS integer
+    AS bigint
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -48,7 +28,7 @@ ALTER TABLE ONLY cardapios ALTER COLUMN id SET DEFAULT nextval('cardapios_id_seq
 --
 
 CREATE TABLE usuarios (
-    id integer NOT NULL,
+    id bigint NOT NULL,
     nome character varying(255) NOT NULL,
     email character varying(255) NOT NULL,
     senha character varying(255) NOT NULL,
@@ -61,7 +41,7 @@ CREATE TABLE usuarios (
 );
 
 CREATE SEQUENCE usuarios_id_seq
-    AS integer
+    AS bigint
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -76,7 +56,7 @@ ALTER TABLE ONLY usuarios ALTER COLUMN id SET DEFAULT nextval('usuarios_id_seq':
 --
 
 CREATE TABLE mesas (
-    id integer NOT NULL,
+    id bigint NOT NULL,
     status character varying(30) DEFAULT 'LIVRE'::character varying NOT NULL,
     numero integer NOT NULL,
     capacidade integer DEFAULT 4 NOT NULL,
@@ -85,7 +65,7 @@ CREATE TABLE mesas (
 );
 
 CREATE SEQUENCE mesas_id_seq
-    AS integer
+    AS bigint
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -100,10 +80,10 @@ ALTER TABLE ONLY mesas ALTER COLUMN id SET DEFAULT nextval('mesas_id_seq'::regcl
 --
 
 CREATE TABLE funcionarios (
-    usuario_id integer NOT NULL,
+    usuario_id bigint NOT NULL,
     matricula character varying(50) NOT NULL,
     data_admissao date NOT NULL,
-    salario numeric(10,2),
+    salario double precision,
     CONSTRAINT funcionarios_pkey PRIMARY KEY (usuario_id),
     CONSTRAINT funcionarios_matricula_key UNIQUE (matricula),
     CONSTRAINT funcionarios_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
@@ -114,10 +94,10 @@ CREATE TABLE funcionarios (
 --
 
 CREATE TABLE itens (
-    id integer NOT NULL,
-    cardapio_id integer NOT NULL,
+    id bigint NOT NULL,
+    cardapio_id bigint NOT NULL,
     nome character varying(50) NOT NULL,
-    preco numeric(10,2) NOT NULL,
+    preco double precision NOT NULL,
     tipo character varying(50) DEFAULT 'NORMAL'::character varying NOT NULL,
     categoria character varying(50) DEFAULT 'COMIDA'::character varying NOT NULL,
     CONSTRAINT itens_pkey PRIMARY KEY (id),
@@ -128,7 +108,7 @@ CREATE TABLE itens (
 );
 
 CREATE SEQUENCE itens_id_seq
-    AS integer
+    AS bigint
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -143,8 +123,8 @@ ALTER TABLE ONLY itens ALTER COLUMN id SET DEFAULT nextval('itens_id_seq'::regcl
 --
 
 CREATE TABLE garcons (
-    funcionario_id integer NOT NULL,
-    bonus numeric(10,2),
+    funcionario_id bigint NOT NULL,
+    bonus double precision,
     CONSTRAINT garcons_pkey PRIMARY KEY (funcionario_id),
     CONSTRAINT garcons_funcionario_id_fkey FOREIGN KEY (funcionario_id) REFERENCES funcionarios(usuario_id) ON DELETE CASCADE
 );
@@ -154,7 +134,7 @@ CREATE TABLE garcons (
 --
 
 CREATE TABLE cozinheiros (
-    funcionario_id integer NOT NULL,
+    funcionario_id bigint NOT NULL,
     status character varying(50) DEFAULT 'LIVRE'::character varying NOT NULL,
     CONSTRAINT cozinheiros_pkey PRIMARY KEY (funcionario_id),
     CONSTRAINT cozinheiros_funcionario_id_fkey FOREIGN KEY (funcionario_id) REFERENCES funcionarios(usuario_id) ON DELETE CASCADE
@@ -165,7 +145,7 @@ CREATE TABLE cozinheiros (
 --
 
 CREATE TABLE barmen (
-    funcionario_id integer NOT NULL,
+    funcionario_id bigint NOT NULL,
     status character varying(50) DEFAULT 'LIVRE'::character varying NOT NULL,
     CONSTRAINT barmen_pkey PRIMARY KEY (funcionario_id),
     CONSTRAINT barmen_funcionario_id_fkey FOREIGN KEY (funcionario_id) REFERENCES funcionarios(usuario_id) ON DELETE CASCADE
@@ -176,7 +156,7 @@ CREATE TABLE barmen (
 --
 
 CREATE TABLE admins (
-    funcionario_id integer NOT NULL,
+    funcionario_id bigint NOT NULL,
     nivel_acesso integer DEFAULT 1 NOT NULL,
     CONSTRAINT admins_pkey PRIMARY KEY (funcionario_id),
     CONSTRAINT admins_funcionario_id_fkey FOREIGN KEY (funcionario_id) REFERENCES funcionarios(usuario_id) ON DELETE CASCADE
@@ -187,22 +167,22 @@ CREATE TABLE admins (
 --
 
 CREATE TABLE comandas (
-    id integer NOT NULL,
-    mesa_id integer NOT NULL,
-    garcom_id integer NOT NULL,
+    id bigint NOT NULL,
+    mesa_id bigint NOT NULL,
+    garcom_id bigint NOT NULL,
     status character varying(50) DEFAULT 'ABERTA'::character varying NOT NULL,
     nome character varying(50) NOT NULL,
     data_abertura timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     data_fechamento timestamp without time zone,
     taxaservico boolean DEFAULT true,
-    valortotal numeric(10,2) NOT NULL,
+    valortotal double precision NOT NULL,
     CONSTRAINT comandas_pkey PRIMARY KEY (id),
     CONSTRAINT comandas_mesa_id_fkey FOREIGN KEY (mesa_id) REFERENCES mesas(id),
     CONSTRAINT comandas_garcom_id_fkey FOREIGN KEY (garcom_id) REFERENCES garcons(funcionario_id)
 );
 
 CREATE SEQUENCE comandas_id_seq
-    AS integer
+    AS bigint
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -217,12 +197,12 @@ ALTER TABLE ONLY comandas ALTER COLUMN id SET DEFAULT nextval('comandas_id_seq':
 --
 
 CREATE TABLE pedidos (
-    id integer NOT NULL,
-    garcom_id integer,
-    comanda_id integer NOT NULL,
-    item_id integer NOT NULL,
-    cozinheiro_id integer,
-    barman_id integer,
+    id bigint NOT NULL,
+    garcom_id bigint,
+    comanda_id bigint NOT NULL,
+    item_id bigint NOT NULL,
+    cozinheiro_id bigint,
+    barman_id bigint,
     quantidade integer NOT NULL,
     obs character varying(255),
     status character varying(50) NOT NULL,
@@ -235,7 +215,7 @@ CREATE TABLE pedidos (
 );
 
 CREATE SEQUENCE pedidos_id_seq
-    AS integer
+    AS bigint
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -244,7 +224,3 @@ CREATE SEQUENCE pedidos_id_seq
 
 ALTER SEQUENCE pedidos_id_seq OWNED BY pedidos.id;
 ALTER TABLE ONLY pedidos ALTER COLUMN id SET DEFAULT nextval('pedidos_id_seq'::regclass);
-
---
--- PostgreSQL database initialization complete
---
