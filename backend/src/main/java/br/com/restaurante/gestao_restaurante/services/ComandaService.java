@@ -64,6 +64,7 @@ public class ComandaService {
                 .collect(Collectors.toList());
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public ComandaResponseDTO criarNovaComanda(ComandaCreateDTO comandaDTO) {
        
         Mesa mesa = mesaRepository.findById(comandaDTO.getMesaId())

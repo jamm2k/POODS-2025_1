@@ -9,4 +9,5 @@ public class MesaResponseDTO {
     private Long id;
     private Integer numero;
     private String status;
+    private Integer capacidade;
 }

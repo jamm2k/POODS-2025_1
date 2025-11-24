@@ -22,6 +22,9 @@ public class Mesa {
     @Column(nullable = false)
     private String status;
 
+    @Column(nullable = false)
+    private Integer capacidade;
+
     @OneToMany(mappedBy = "mesa")
     private List<Comanda> comandas;
 

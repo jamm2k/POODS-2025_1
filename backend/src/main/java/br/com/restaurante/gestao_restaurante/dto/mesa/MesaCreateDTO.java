@@ -7,4 +7,5 @@ import lombok.Setter;
 @Setter
 public class MesaCreateDTO {
     private Integer numero;
+    private Integer capacidade;
 }

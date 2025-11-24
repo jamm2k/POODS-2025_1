@@ -12,6 +12,7 @@ public class MesaMapper {
     public Mesa toEntity(MesaCreateDTO mesaDTO) {
         Mesa mesa = new Mesa();
         mesa.setNumero(mesaDTO.getNumero());
+        mesa.setCapacidade(mesaDTO.getCapacidade());
         return mesa;
     }
 
@@ -24,6 +25,7 @@ public class MesaMapper {
         dto.setId(mesa.getId());
         dto.setNumero(mesa.getNumero());
         dto.setStatus(mesa.getStatus());
+        dto.setCapacidade(mesa.getCapacidade());
 
         return dto;
     }
