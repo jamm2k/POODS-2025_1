@@ -1,22 +1,22 @@
 import React, { useState } from 'react';
-import { 
-  Container, 
-  TextField, 
-  Button, 
-  Box, 
-  Typography, 
-  Alert, 
-  Paper, 
-  InputAdornment, 
-  IconButton, 
-  CircularProgress 
+import {
+  Container,
+  TextField,
+  Button,
+  Box,
+  Typography,
+  Alert,
+  Paper,
+  InputAdornment,
+  IconButton,
+  CircularProgress
 } from '@mui/material';
-import { 
-  Visibility, 
-  VisibilityOff, 
-  RestaurantMenu, 
-  Email, 
-  Lock 
+import {
+  Visibility,
+  VisibilityOff,
+  RestaurantMenu,
+  Email,
+  Lock
 } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -49,7 +49,7 @@ const LoginPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateEmail(email)) {
       setError('Por favor, insira um e-mail válido.');
       setEmailError(true);
@@ -66,8 +66,7 @@ const LoginPage: React.FC = () => {
 
     try {
       const user = await login(email, password);
-      
-      // redireciona baseado no tipo de usuário do banco
+
       switch (user.tipoUsuario) {
         case 'ADMIN':
           navigate('/admin');
@@ -120,7 +119,8 @@ const LoginPage: React.FC = () => {
         alignItems: 'center',
         justifyContent: 'center',
         background: 'linear-gradient(135deg, #0d6869ff 0%, #0e4775ff 100%)',
-        overflow: 'hidden',
+        overflow: 'auto',
+        p: 2,
       }}
     >
       <Paper
@@ -128,29 +128,28 @@ const LoginPage: React.FC = () => {
         sx={{
           p: { xs: 3, sm: 4 },
           width: '100%',
-          maxWidth: 400,
-          borderRadius: 4,
+          maxWidth: { xs: 360, sm: 400 },
+          borderRadius: 3,
           display: 'flex',
           flexDirection: 'column',
-          gap: 2.5,
+          gap: 2,
           background: '#FFFFFF',
           boxShadow: '0 8px 30px rgba(0, 0, 0, 0.2)',
-          backdropFilter: 'blur(10px)',
         }}
       >
-        <Box sx={{ textAlign: 'center', mb: 1 }}>
+        <Box sx={{ textAlign: 'center', mb: 0.5 }}>
           <Box
             sx={{
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
-              mb: 2,
+              mb: 1.5,
             }}
           >
             <Box
               sx={{
-                width: 80,
-                height: 80,
+                width: { xs: 60, sm: 70 },
+                height: { xs: 60, sm: 70 },
                 borderRadius: '50%',
                 background: 'linear-gradient(135deg, #0B5D5E 0%, #0E7575 100%)',
                 display: 'flex',
@@ -159,12 +158,12 @@ const LoginPage: React.FC = () => {
                 boxShadow: '0 4px 15px rgba(11, 93, 94, 0.4)',
               }}
             >
-              <RestaurantMenu sx={{ fontSize: 40, color: 'white' }} />
+              <RestaurantMenu sx={{ fontSize: { xs: 32, sm: 36 }, color: 'white' }} />
             </Box>
           </Box>
-          
+
           <Typography
-            variant="h4"
+            variant="h5"
             fontWeight="bold"
             sx={{
               background: 'linear-gradient(135deg, #0B5D5E 0%, #0E7575 100%)',
@@ -172,22 +171,23 @@ const LoginPage: React.FC = () => {
               textFillColor: 'transparent',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
+              fontSize: { xs: '1.5rem', sm: '1.75rem' },
             }}
           >
             Restaurante
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25, fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
             Sistema de Gestão
           </Typography>
         </Box>
 
-        <Box sx={{ height: 1, background: 'linear-gradient(90deg, transparent, #e0e0e0, transparent)', my: 1 }} />
+        <Box sx={{ height: 1, background: 'linear-gradient(90deg, transparent, #e0e0e0, transparent)', my: 0.5 }} />
 
         {error && (
-          <Alert 
-            severity="error" 
+          <Alert
+            severity="error"
             onClose={() => setError(null)}
-            sx={{ borderRadius: 2 }}
+            sx={{ borderRadius: 2, py: 0.5 }}
           >
             {error}
           </Alert>
@@ -196,7 +196,7 @@ const LoginPage: React.FC = () => {
         <Box
           component="form"
           onSubmit={handleSubmit}
-          sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}
+          sx={{ display: 'flex', flexDirection: 'column', gap: 1.75 }}
         >
           <TextField
             label="E-mail"
@@ -210,10 +210,11 @@ const LoginPage: React.FC = () => {
             required
             autoComplete="email"
             autoFocus
+            size="small"
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <Email color={emailError ? 'error' : 'action'} />
+                  <Email color={emailError ? 'error' : 'action'} sx={{ fontSize: 20 }} />
                 </InputAdornment>
               ),
             }}
@@ -233,10 +234,11 @@ const LoginPage: React.FC = () => {
             fullWidth
             required
             autoComplete="current-password"
+            size="small"
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <Lock color="action" />
+                  <Lock color="action" sx={{ fontSize: 20 }} />
                 </InputAdornment>
               ),
               endAdornment: (
@@ -245,8 +247,9 @@ const LoginPage: React.FC = () => {
                     onClick={() => setShowPassword(!showPassword)}
                     edge="end"
                     tabIndex={-1}
+                    size="small"
                   >
-                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                    {showPassword ? <VisibilityOff sx={{ fontSize: 20 }} /> : <Visibility sx={{ fontSize: 20 }} />}
                   </IconButton>
                 </InputAdornment>
               ),
@@ -264,10 +267,11 @@ const LoginPage: React.FC = () => {
             fullWidth
             disabled={loading}
             sx={{
-              py: 1.5,
+              py: 1.25,
+              mt: 0.5,
               borderRadius: 2,
               background: 'linear-gradient(135deg, #0B5D5E 0%, #0E7575 100%)',
-              fontSize: '1rem',
+              fontSize: { xs: '0.95rem', sm: '1rem' },
               fontWeight: 'bold',
               textTransform: 'none',
               boxShadow: '0 4px 15px rgba(11, 93, 94, 0.4)',
@@ -282,7 +286,7 @@ const LoginPage: React.FC = () => {
           >
             {loading ? (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <CircularProgress size={20} color="inherit" />
+                <CircularProgress size={18} color="inherit" />
                 <span>Entrando...</span>
               </Box>
             ) : (
@@ -291,13 +295,13 @@ const LoginPage: React.FC = () => {
           </Button>
         </Box>
 
-        <Box sx={{ mt: 2, pt: 2, borderTop: 1, borderColor: 'divider' }}>
+        <Box sx={{ mt: 1.5, pt: 1.5, borderTop: 1, borderColor: 'divider' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, flexWrap: 'wrap' }}>
-            <Typography variant="caption" color="text.secondary">Admin</Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}>Admin</Typography>
             <Typography variant="caption" color="text.secondary">•</Typography>
-            <Typography variant="caption" color="text.secondary">Garçom</Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}>Garçom</Typography>
             <Typography variant="caption" color="text.secondary">•</Typography>
-            <Typography variant="caption" color="text.secondary">Cozinheiro</Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}>Cozinheiro</Typography>
           </Box>
         </Box>
       </Paper>

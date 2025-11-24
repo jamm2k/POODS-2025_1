@@ -6,7 +6,7 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     VitePWA({
-      disable: mode === 'development', 
+      disable: mode === 'development',
       registerType: 'autoUpdate',
       manifest: {
         name: 'Sistema de Restaurante',
@@ -23,5 +23,10 @@ export default defineConfig(({ mode }) => ({
         globPatterns: ['**/*.{js,css,html,ico,png,svg}']
       }
     })
-  ]
+  ],
+  server: {
+    host: '0.0.0.0',
+    port: 5174,
+    strictPort: true,
+  }
 }))

@@ -27,6 +27,7 @@ import {
     Chip,
     CircularProgress,
     Avatar,
+    ListItemButton,
 } from '@mui/material';
 import {
     AccountCircle,
@@ -39,6 +40,7 @@ import {
     Delete,
     Person,
     AdminPanelSettings,
+    Menu as MenuIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -50,6 +52,7 @@ const DashboardAdmin: React.FC = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const [mobileOpen, setMobileOpen] = useState(false);
     const [activeTab, setActiveTab] = useState(0);
     const [loading, setLoading] = useState(false);
 
@@ -91,6 +94,10 @@ const DashboardAdmin: React.FC = () => {
         }
     };
 
+    const handleDrawerToggle = () => {
+        setMobileOpen(!mobileOpen);
+    };
+
     const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorEl(event.currentTarget);
     };
@@ -123,11 +130,11 @@ const DashboardAdmin: React.FC = () => {
                 if (editingItem) {
                     await adminService.updateMesaNumero(editingItem.id, formData.numero);
                 } else {
-                    await adminService.createMesa(formData.numero);
+                    await adminService.createMesa(formData.numero, formData.capacidade);
                 }
             } else if (dialogType === 'FUNCIONARIO') {
                 if (editingItem) {
-                    await adminService.updateFuncionario(formData.tipo, editingItem.id, formData);
+                    await adminService.updateFuncionario(editingItem.id, formData.tipo, formData);
                 } else {
                     await adminService.createFuncionario(formData.tipo, formData);
                 }
@@ -160,6 +167,26 @@ const DashboardAdmin: React.FC = () => {
         }
     };
 
+    const drawerContent = (
+        <Box>
+            <Toolbar />
+            <List>
+                <ListItemButton selected={activeTab === 0} onClick={() => { setActiveTab(0); setMobileOpen(false); }}>
+                    <ListItemIcon><TableRestaurant /></ListItemIcon>
+                    <ListItemText primary="Mesas" />
+                </ListItemButton>
+                <ListItemButton selected={activeTab === 1} onClick={() => { setActiveTab(1); setMobileOpen(false); }}>
+                    <ListItemIcon><People /></ListItemIcon>
+                    <ListItemText primary="Funcionários" />
+                </ListItemButton>
+                <ListItemButton selected={activeTab === 2} onClick={() => { setActiveTab(2); setMobileOpen(false); }}>
+                    <ListItemIcon><RestaurantMenu /></ListItemIcon>
+                    <ListItemText primary="Cardápio" />
+                </ListItemButton>
+            </List>
+        </Box>
+    );
+
     const renderMesas = () => (
         <Box>
             <Button
@@ -176,6 +203,7 @@ const DashboardAdmin: React.FC = () => {
                         <Paper sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <Box>
                                 <Typography variant="h6">Mesa {mesa.numero}</Typography>
+                                <Typography variant="body2" color="text.secondary">Capacidade: {mesa.capacidade || 4}</Typography>
                                 <Chip
                                     label={mesa.status}
                                     color={mesa.status === 'LIVRE' ? 'success' : 'error'}
@@ -275,9 +303,26 @@ const DashboardAdmin: React.FC = () => {
 
     return (
         <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#f5f5f5' }}>
-            <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1, background: 'linear-gradient(135deg, #0B5D5E 0%, #0E7575 100%)' }}>
+            <AppBar
+                position="fixed"
+                sx={{
+                    zIndex: (theme) => theme.zIndex.drawer + 1,
+                    background: 'linear-gradient(135deg, #0B5D5E 0%, #0E7575 100%)',
+                    width: { sm: `calc(100% - ${drawerWidth}px)` },
+                    ml: { sm: `${drawerWidth}px` }
+                }}
+            >
                 <Toolbar>
-                    <AdminPanelSettings sx={{ mr: 2, fontSize: 32 }} />
+                    <IconButton
+                        color="inherit"
+                        aria-label="open drawer"
+                        edge="start"
+                        onClick={handleDrawerToggle}
+                        sx={{ mr: 2, display: { sm: 'none' } }}
+                    >
+                        <MenuIcon />
+                    </IconButton>
+                    <AdminPanelSettings sx={{ mr: 2, fontSize: 32, display: { xs: 'none', sm: 'block' } }} />
                     <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
                         Administração
                     </Typography>
@@ -308,31 +353,39 @@ const DashboardAdmin: React.FC = () => {
                 </Toolbar>
             </AppBar>
 
-            <Drawer
-                variant="permanent"
-                sx={{
-                    width: drawerWidth,
-                    flexShrink: 0,
-                    [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box', mt: 8 },
-                }}
+            <Box
+                component="nav"
+                sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
+                aria-label="mailbox folders"
             >
-                <List>
-                    <ListItem button selected={activeTab === 0} onClick={() => setActiveTab(0)}>
-                        <ListItemIcon><TableRestaurant /></ListItemIcon>
-                        <ListItemText primary="Mesas" />
-                    </ListItem>
-                    <ListItem button selected={activeTab === 1} onClick={() => setActiveTab(1)}>
-                        <ListItemIcon><People /></ListItemIcon>
-                        <ListItemText primary="Funcionários" />
-                    </ListItem>
-                    <ListItem button selected={activeTab === 2} onClick={() => setActiveTab(2)}>
-                        <ListItemIcon><RestaurantMenu /></ListItemIcon>
-                        <ListItemText primary="Cardápio" />
-                    </ListItem>
-                </List>
-            </Drawer>
+                <Drawer
+                    variant="temporary"
+                    open={mobileOpen}
+                    onClose={handleDrawerToggle}
+                    ModalProps={{
+                        keepMounted: true,
+                    }}
+                    sx={{
+                        display: { xs: 'block', sm: 'none' },
+                        '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+                    }}
+                >
+                    {drawerContent}
+                </Drawer>
 
-            <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8 }}>
+                <Drawer
+                    variant="permanent"
+                    sx={{
+                        display: { xs: 'none', sm: 'block' },
+                        '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth, mt: 8 },
+                    }}
+                    open
+                >
+                    {drawerContent}
+                </Drawer>
+            </Box>
+
+            <Box component="main" sx={{ flexGrow: 1, p: 3, width: { sm: `calc(100% - ${drawerWidth}px)` }, mt: 8 }}>
                 {loading ? (
                     <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
                         <CircularProgress />
@@ -353,13 +406,22 @@ const DashboardAdmin: React.FC = () => {
                 <DialogContent>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
                         {dialogType === 'MESA' && (
-                            <TextField
-                                label="Número da Mesa"
-                                type="number"
-                                value={formData.numero || ''}
-                                onChange={(e) => setFormData({ ...formData, numero: parseInt(e.target.value) })}
-                                fullWidth
-                            />
+                            <>
+                                <TextField
+                                    label="Número da Mesa"
+                                    type="number"
+                                    value={formData.numero || ''}
+                                    onChange={(e) => setFormData({ ...formData, numero: parseInt(e.target.value) })}
+                                    fullWidth
+                                />
+                                <TextField
+                                    label="Capacidade"
+                                    type="number"
+                                    value={formData.capacidade || ''}
+                                    onChange={(e) => setFormData({ ...formData, capacidade: parseInt(e.target.value) })}
+                                    fullWidth
+                                />
+                            </>
                         )}
                         {dialogType === 'FUNCIONARIO' && (
                             <>

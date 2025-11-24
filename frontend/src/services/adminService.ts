@@ -4,6 +4,7 @@ export interface Mesa {
     id: number;
     numero: number;
     status: 'LIVRE' | 'OCUPADA';
+    capacidade: number;
 }
 
 export interface Funcionario {
@@ -35,8 +36,8 @@ class AdminService {
         return response.data;
     }
 
-    async createMesa(numero: number): Promise<Mesa> {
-        const response = await api.post('/api/mesas', { numero });
+    async createMesa(numero: number, capacidade: number): Promise<Mesa> {
+        const response = await api.post('/api/mesas', { numero, capacidade });
         return response.data;
     }
 
