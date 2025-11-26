@@ -213,38 +213,6 @@ const DashboardBar: React.FC = () => {
             Dashboard - Bar
           </Typography>
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mr: 2 }}>
-            <Badge
-              badgeContent={pedidosSolicitados.length}
-              color="error"
-              sx={{
-                '& .MuiBadge-badge': {
-                  fontSize: '0.9rem',
-                  fontWeight: 'bold',
-                },
-              }}
-            >
-              <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                Pendentes
-              </Typography>
-            </Badge>
-
-            <Badge
-              badgeContent={pedidosEmPreparo.length}
-              color="warning"
-              sx={{
-                '& .MuiBadge-badge': {
-                  fontSize: '0.9rem',
-                  fontWeight: 'bold',
-                },
-              }}
-            >
-              <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                Em Preparo
-              </Typography>
-            </Badge>
-          </Box>
-
           <IconButton color="inherit" onClick={handleMenuOpen}>
             <AccountCircle />
           </IconButton>
@@ -330,8 +298,8 @@ const DashboardBar: React.FC = () => {
           </Box>
         </Paper>
 
-        <Typography variant="h5" fontWeight="bold" gutterBottom sx={{ mb: 2 }}>
-          🍹 Pedidos Pendentes ({pedidosSolicitados.length})
+        <Typography variant="h5" fontWeight="bold" gutterBottom sx={{ mb: 2, color: '#0E7575' }}>
+          Pedidos Pendentes ({pedidosSolicitados.length})
         </Typography>
 
         {pedidosSolicitados.length === 0 ? (
@@ -445,8 +413,8 @@ const DashboardBar: React.FC = () => {
 
         <Divider sx={{ my: 4 }} />
 
-        <Typography variant="h5" fontWeight="bold" gutterBottom sx={{ mb: 2 }}>
-          🍸 Em Preparo ({pedidosEmPreparo.length})
+        <Typography variant="h5" fontWeight="bold" gutterBottom sx={{ mb: 2, color: '#0E7575' }}>
+          Em Preparo ({pedidosEmPreparo.length})
         </Typography>
 
         {pedidosEmPreparo.length === 0 ? (

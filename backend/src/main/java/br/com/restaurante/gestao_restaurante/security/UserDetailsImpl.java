@@ -9,31 +9,31 @@ import org.springframework.security.core.userdetails.UserDetails;
 import br.com.restaurante.gestao_restaurante.models.Usuario;
 import br.com.restaurante.gestao_restaurante.repositories.UsuarioRepository;
 
-public class UserDetailsImpl implements UserDetails{
-    
+public class UserDetailsImpl implements UserDetails {
+
     private Usuario usuario;
 
     private UsuarioRepository usuarioRepository;
 
-    public UserDetailsImpl(Usuario usuario){
+    public UserDetailsImpl(Usuario usuario) {
         this.usuario = usuario;
     }
 
-    public Long getId(){
+    public Long getId() {
         return usuario.getId();
     }
 
-    public String getNome(){
+    public String getNome() {
         return usuario.getNome();
     }
 
-    public String getTipoUsuario(){
+    public String getTipoUsuario() {
         return usuario.getTipoUsuario();
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        if (usuario.getTipoUsuario() == null){
+        if (usuario.getTipoUsuario() == null) {
             return Collections.emptyList();
         }
 

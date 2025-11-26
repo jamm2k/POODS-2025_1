@@ -258,38 +258,6 @@ const DashboardCozinha: React.FC = () => {
             Dashboard - Cozinha
           </Typography>
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mr: 2 }}>
-            <Badge
-              badgeContent={pedidosSolicitados.length}
-              color="error"
-              sx={{
-                '& .MuiBadge-badge': {
-                  fontSize: '0.9rem',
-                  fontWeight: 'bold',
-                },
-              }}
-            >
-              <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                Pendentes
-              </Typography>
-            </Badge>
-
-            <Badge
-              badgeContent={pedidosEmPreparo.length}
-              color="warning"
-              sx={{
-                '& .MuiBadge-badge': {
-                  fontSize: '0.9rem',
-                  fontWeight: 'bold',
-                },
-              }}
-            >
-              <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                Em Preparo
-              </Typography>
-            </Badge>
-          </Box>
-
           <IconButton color="inherit" onClick={handleMenuOpen}>
             <AccountCircle />
           </IconButton>
@@ -376,7 +344,7 @@ const DashboardCozinha: React.FC = () => {
         </Paper>
 
         {/* pedidos solicitados */}
-        <Typography variant="h5" fontWeight="bold" gutterBottom sx={{ mb: 2 }}>
+        <Typography variant="h5" fontWeight="bold" gutterBottom sx={{ mb: 2, color: '#0E7575' }}>
           Pedidos Pendentes ({pedidosSolicitados.length})
         </Typography>
 
@@ -480,7 +448,7 @@ const DashboardCozinha: React.FC = () => {
 
         <Divider sx={{ my: 4 }} />
 
-        <Typography variant="h5" fontWeight="bold" gutterBottom sx={{ mb: 2 }}>
+        <Typography variant="h5" fontWeight="bold" gutterBottom sx={{ mb: 2, color: '#0E7575' }}>
           Em Preparo ({pedidosEmPreparo.length})
         </Typography>
 
