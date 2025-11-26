@@ -1,0 +1,71 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: restaurante-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: restaurantedb
+      POSTGRES_USER: fred
+      POSTGRES_PASSWORD: 1234
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - restaurante-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U fred -d restaurantedb" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: restaurante-backend
+    restart: unless-stopped
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/restaurantedb
+      SPRING_DATASOURCE_USERNAME: fred
+      SPRING_DATASOURCE_PASSWORD: 1234
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_FLYWAY_ENABLED: "true"
+      SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
+      SPRING_FLYWAY_LOCATIONS: classpath:db/migration
+      SPRING_FLYWAY_BASELINE_VERSION: 0
+      JWT_SECRET: nV9FlWX9CRFfoCfyDpAlK5ak1i61nFDAMa28/zRS+pTTnm0HLYA4gUdS4VwDO5fq
+      JWT_EXPIRATION: 3600
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - restaurante-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: restaurante-frontend
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: http://localhost:8080
+    ports:
+      - "3000:5173"
+    depends_on:
+      - backend
+    networks:
+      - restaurante-network
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+
+networks:
+  restaurante-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
