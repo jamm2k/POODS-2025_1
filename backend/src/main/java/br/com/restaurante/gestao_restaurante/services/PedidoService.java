@@ -26,14 +26,14 @@ public class PedidoService {
     private PedidoRepository pedidoRepository;
 
     @Autowired
-    private PedidoMapper pedidoMapper;  
+    private PedidoMapper pedidoMapper;
 
     @Autowired
     private GarcomRepository garcomRepository;
 
     @Autowired
     private ComandaRepository comandaRepository;
-    
+
     @Autowired
     private ItemRepository itemRepository;
 
@@ -48,7 +48,7 @@ public class PedidoService {
 
     private Pedido findById(Long id) {
         return pedidoRepository.findById(id)
-            .orElseThrow(() -> new EntityNotFoundException("Pedido não encontrado com o ID: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Pedido não encontrado com o ID: " + id));
     }
 
     public PedidoResponseDTO findByIdPedido(Long id) {
@@ -58,14 +58,14 @@ public class PedidoService {
 
     public List<PedidoResponseDTO> findAllPedidos() {
         return pedidoRepository.findAll()
-            .stream()
-            .map(pedidoMapper::toResponseDTO)
-            .toList();
+                .stream()
+                .map(pedidoMapper::toResponseDTO)
+                .toList();
     }
 
     public List<PedidoResponseDTO> findPedidosByComanda(Long comandaId) {
         Comanda comanda = comandaRepository.findById(comandaId)
-            .orElseThrow(() -> new EntityNotFoundException("Comanda não encontrada com o ID: " + comandaId));
+                .orElseThrow(() -> new EntityNotFoundException("Comanda não encontrada com o ID: " + comandaId));
 
         List<Pedido> pedidos = pedidoRepository.findByComanda(comanda);
         return pedidos.stream()
@@ -73,9 +73,9 @@ public class PedidoService {
                 .toList();
     }
 
-    public List<PedidoResponseDTO> findPedidosByGarcom(Long garcomId){
+    public List<PedidoResponseDTO> findPedidosByGarcom(Long garcomId) {
         Garcom garcom = garcomRepository
-        .findById(garcomId).orElseThrow(() -> new EntityNotFoundException("Garcom não encontrado"));
+                .findById(garcomId).orElseThrow(() -> new EntityNotFoundException("Garcom não encontrado"));
 
         List<Pedido> pedidos = pedidoRepository.findByGarcom(garcom);
         return pedidos.stream()
@@ -85,20 +85,20 @@ public class PedidoService {
 
     public PedidoResponseDTO criarNovoPedido(PedidoCreateDTO pedidoDTO) {
         Pedido pedido = pedidoMapper.toEntity(pedidoDTO);
-        
+
         Garcom garcom = garcomRepository.findById(pedidoDTO.getGarcomId())
-            .orElseThrow(() -> new RuntimeException("Garçom não encontrado com o ID: " + pedidoDTO.getGarcomId()));
-        
+                .orElseThrow(() -> new RuntimeException("Garçom não encontrado com o ID: " + pedidoDTO.getGarcomId()));
+
         Comanda comanda = comandaRepository.findById(pedidoDTO.getComandaId())
-            .orElseThrow(() -> new RuntimeException("Comanda não encontrada com o ID: " + pedidoDTO.getComandaId()));
-        
-        if(!"ABERTA".equals(comanda.getStatus())) {
+                .orElseThrow(
+                        () -> new RuntimeException("Comanda não encontrada com o ID: " + pedidoDTO.getComandaId()));
+
+        if (!"ABERTA".equalsIgnoreCase(comanda.getStatus())) {
             throw new RuntimeException("Não é possível adicionar pedidos a uma comanda fechada.");
         }
         Item item = itemRepository.findById(pedidoDTO.getItemId())
-            .orElseThrow(() -> new RuntimeException("Item não encontrado com o ID: " + pedidoDTO.getItemId()));
+                .orElseThrow(() -> new RuntimeException("Item não encontrado com o ID: " + pedidoDTO.getItemId()));
 
-        
         pedido.setGarcom(garcom);
         pedido.setComanda(comanda);
         pedido.setItem(item);
@@ -112,13 +112,11 @@ public class PedidoService {
         return pedidoMapper.toResponseDTO(pedidoSalvo);
     }
 
-    
-    
-    public PedidoResponseDTO atualizarPedido (Long id, PedidoUpdateDTO pedidoDTO) {
+    public PedidoResponseDTO atualizarPedido(Long id, PedidoUpdateDTO pedidoDTO) {
         Pedido pedidoExistente = this.findById(id);
         Comanda comanda = pedidoExistente.getComanda();
 
-        if("SOLICITADO".equals(pedidoExistente.getStatus())){
+        if ("SOLICITADO".equals(pedidoExistente.getStatus())) {
             if (pedidoDTO.getObs() != null) {
                 pedidoExistente.setObs(pedidoDTO.getObs());
             }
@@ -127,13 +125,12 @@ public class PedidoService {
             }
         }
         comandaService.atualizarValorTotalComanda(comanda);
-        
 
         Pedido pedidoSalvo = pedidoRepository.save(pedidoExistente);
         return pedidoMapper.toResponseDTO(pedidoSalvo);
     }
 
-    public PedidoResponseDTO atualizarStatusPedido(Long id, PedidoUpdateStatusDTO pedidoDTO){
+    public PedidoResponseDTO atualizarStatusPedido(Long id, PedidoUpdateStatusDTO pedidoDTO) {
         Pedido pedidoExistente = this.findById(id);
         if (pedidoDTO.getStatusPedido() != null) {
             pedidoExistente.setStatus(pedidoDTO.getStatusPedido());
@@ -143,63 +140,65 @@ public class PedidoService {
         return pedidoMapper.toResponseDTO(pedidoSalvo);
     }
 
-    public PedidoResponseDTO atribuirCozinheiro(Long pedidoId, Long cozinheiroId){
+    public PedidoResponseDTO atribuirCozinheiro(Long pedidoId, Long cozinheiroId) {
         Cozinheiro cozinheiro = cozinheiroService.findById(cozinheiroId);
         Pedido pedido = this.findById(pedidoId);
 
         PedidoUpdateStatusDTO statusDTO = new PedidoUpdateStatusDTO();
         CozinheiroUpdateStatusDTO cozinheiroStatusDTO = new CozinheiroUpdateStatusDTO();
 
-
         if (pedido.getCozinheiro() == null && "LIVRE".equals(cozinheiro.getStatus())) {
             pedido.setCozinheiro(cozinheiro);
             pedidoRepository.save(pedido);
-            
+
             statusDTO.setStatusPedido("EM PREPARO");
-            
+
             cozinheiroStatusDTO.setStatus("OCUPADO");
             cozinheiroService.alterarStatusCozinheiro(cozinheiroId, cozinheiroStatusDTO);
 
-        }else{
-            if (pedido.getCozinheiro() != null) throw new IllegalStateException("Pedido já atribuído a outro cozinheiro.");
-            if (!"LIVRE".equals(cozinheiro.getStatus())) throw new IllegalStateException("Cozinheiro não está livre.");
-        }       
+        } else {
+            if (pedido.getCozinheiro() != null)
+                throw new IllegalStateException("Pedido já atribuído a outro cozinheiro.");
+            if (!"LIVRE".equals(cozinheiro.getStatus()))
+                throw new IllegalStateException("Cozinheiro não está livre.");
+        }
 
         return this.atualizarStatusPedido(pedidoId, statusDTO);
     }
 
-    public PedidoResponseDTO atribuirBarman(Long pedidoId, Long barmanId){
+    public PedidoResponseDTO atribuirBarman(Long pedidoId, Long barmanId) {
         br.com.restaurante.gestao_restaurante.models.Barman barman = barmanService.findById(barmanId);
         Pedido pedido = this.findById(pedidoId);
 
         PedidoUpdateStatusDTO statusDTO = new PedidoUpdateStatusDTO();
         br.com.restaurante.gestao_restaurante.dto.barman.BarmanUpdateStatusDTO barmanStatusDTO = new br.com.restaurante.gestao_restaurante.dto.barman.BarmanUpdateStatusDTO();
 
-
         if (pedido.getBarman() == null && "LIVRE".equals(barman.getStatus())) {
             pedido.setBarman(barman);
             pedidoRepository.save(pedido);
-            
+
             statusDTO.setStatusPedido("EM PREPARO");
-            
+
             barmanStatusDTO.setStatus("OCUPADO");
             barmanService.alterarStatusBarman(barmanId, barmanStatusDTO);
 
-        }else{
-            if (pedido.getBarman() != null) throw new IllegalStateException("Pedido já atribuído a outro barman.");
-            if (!"LIVRE".equals(barman.getStatus())) throw new IllegalStateException("Barman não está livre.");
-        }       
+        } else {
+            if (pedido.getBarman() != null)
+                throw new IllegalStateException("Pedido já atribuído a outro barman.");
+            if (!"LIVRE".equals(barman.getStatus()))
+                throw new IllegalStateException("Barman não está livre.");
+        }
 
         return this.atualizarStatusPedido(pedidoId, statusDTO);
     }
 
-    public PedidoResponseDTO concluirPedido(Long pedidoId, Long cozinheiroId){
+    public PedidoResponseDTO concluirPedido(Long pedidoId, Long cozinheiroId) {
         Pedido pedido = this.findById(pedidoId);
 
         CozinheiroUpdateStatusDTO cozinheiroStatusDTO = new CozinheiroUpdateStatusDTO();
         PedidoUpdateStatusDTO pedidoStatusDTO = new PedidoUpdateStatusDTO();
 
-        if(!"EM PREPARO".equals(pedido.getStatus())){
+        if (!"EM PREPARO".equals(pedido.getStatus())) {
             throw new IllegalStateException("Não se pode concluir pedidos antes do preparo.");
         }
 
@@ -207,18 +206,17 @@ public class PedidoService {
         cozinheiroService.alterarStatusCozinheiro(cozinheiroId, cozinheiroStatusDTO);
 
         pedidoStatusDTO.setStatusPedido("PRONTO");
-        
 
         return this.atualizarStatusPedido(pedidoId, pedidoStatusDTO);
     }
 
-    public PedidoResponseDTO concluirPedidoBarman(Long pedidoId, Long barmanId){
+    public PedidoResponseDTO concluirPedidoBarman(Long pedidoId, Long barmanId) {
         Pedido pedido = this.findById(pedidoId);
 
         br.com.restaurante.gestao_restaurante.dto.barman.BarmanUpdateStatusDTO barmanStatusDTO = new br.com.restaurante.gestao_restaurante.dto.barman.BarmanUpdateStatusDTO();
         PedidoUpdateStatusDTO pedidoStatusDTO = new PedidoUpdateStatusDTO();
 
-        if(!"EM PREPARO".equals(pedido.getStatus())){
+        if (!"EM PREPARO".equals(pedido.getStatus())) {
             throw new IllegalStateException("Não se pode concluir pedidos antes do preparo.");
         }
 
@@ -226,32 +224,30 @@ public class PedidoService {
         barmanService.alterarStatusBarman(barmanId, barmanStatusDTO);
 
         pedidoStatusDTO.setStatusPedido("PRONTO");
-        
 
         return this.atualizarStatusPedido(pedidoId, pedidoStatusDTO);
     }
 
-    public PedidoResponseDTO marcarPedidoEntregue(Long id){
+    public PedidoResponseDTO marcarPedidoEntregue(Long id) {
         Pedido pedido = this.findById(id);
         PedidoUpdateStatusDTO pedidoStatusDTO = new PedidoUpdateStatusDTO();
 
-        if(!"PRONTO".equals(pedido.getStatus())){
+        if (!"PRONTO".equals(pedido.getStatus())) {
             throw new IllegalStateException("Não pode entregar pedido não pronto");
         }
 
         pedidoStatusDTO.setStatusPedido("ENTREGUE");
-        return this.atualizarStatusPedido(id, pedidoStatusDTO);        
+        return this.atualizarStatusPedido(id, pedidoStatusDTO);
     }
 
-    public List<PedidoResponseDTO> buscarPedidoPorStatus(String status){
+    public List<PedidoResponseDTO> buscarPedidoPorStatus(String status) {
         return pedidoRepository.findByStatus(status)
-            .stream()
-            .map(pedidoMapper::toResponseDTO)
-            .toList();
+                .stream()
+                .map(pedidoMapper::toResponseDTO)
+                .toList();
     }
 
-
-    public void deletarPedido (Long id){
+    public void deletarPedido(Long id) {
         Pedido pedidoExistente = this.findById(id);
         pedidoRepository.delete(pedidoExistente);
 

@@ -32,6 +32,10 @@ import {
   People,
   AddCircle,
   Receipt,
+  Add,
+  Remove,
+  Visibility,
+  Send,
 } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -64,6 +68,20 @@ interface Pedido {
   };
 }
 
+interface Item {
+  id: number;
+  nome: string;
+  preco: number;
+  categoria: string;
+  descricao?: string;
+}
+
+interface PedidoCreate {
+  itemId: number;
+  quantidade: number;
+  obs: string;
+}
+
 const DashboardGarcom: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -72,13 +90,20 @@ const DashboardGarcom: React.FC = () => {
   const [pedidosProntos, setPedidosProntos] = useState<Pedido[]>([]);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
-  // Dialogs
   const [dialogPedidosOpen, setDialogPedidosOpen] = useState(false);
   const [dialogAbrirComandaOpen, setDialogAbrirComandaOpen] = useState(false);
-  const [dialogMesaOcupadaOpen, setDialogMesaOcupadaOpen] = useState(false);
 
   const [selectedMesa, setSelectedMesa] = useState<Mesa | null>(null);
   const [nomeCliente, setNomeCliente] = useState('');
+
+  const [dialogOpcoesMesaOpen, setDialogOpcoesMesaOpen] = useState(false);
+
+  const [dialogVerComandaAberta, setDialogVerComandaAberta] = useState(false);
+  const [dialogAdicionarPedidosAberta, setDialogAdicionarPedidosAberta] = useState(false);
+  const [selectedComandaId, setSelectedComandaId] = useState<number | null>(null);
+  const [comandaPedidos, setComandaPedidos] = useState<Pedido[]>([]);
+  const [menuItems, setMenuItems] = useState<Item[]>([]);
+  const [novosItensPedido, setNovosItensPedido] = useState<{ [key: number]: PedidoCreate }>({});
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -103,10 +128,43 @@ const DashboardGarcom: React.FC = () => {
     }
   };
 
+  const buscarItens = async () => {
+    try {
+      const response = await api.get('/api/itens');
+      setMenuItems(response.data);
+    } catch (error) {
+      console.error('Erro ao buscar itens:', error);
+    }
+  };
+
+  const buscarComandaDaMesa = async (mesaId: number) => {
+    try {
+      const response = await api.get(`/api/comandas?mesaId=${mesaId}`);
+      const comandas = response.data;
+      const ativa = comandas.find((c: any) => c.status && c.status.toUpperCase() === 'ABERTA');
+      if (ativa) {
+        setSelectedComandaId(ativa.id);
+        return ativa.id;
+      }
+    } catch (error) {
+      console.error('Erro ao buscar comanda da mesa:', error);
+    }
+    return null;
+  };
+
+  const buscarPedidosDaComanda = async (comandaId: number) => {
+    try {
+      const response = await api.get(`/api/comandas/${comandaId}/pedidos`);
+      setComandaPedidos(response.data);
+    } catch (error) {
+      console.error('Erro ao buscar pedidos da comanda:', error);
+    }
+  };
+
   useEffect(() => {
     const carregarDados = async () => {
       setLoading(true);
-      await Promise.all([buscarMesas(), buscarPedidosProntos()]);
+      await Promise.all([buscarMesas(), buscarPedidosProntos(), buscarItens()]);
       setLoading(false);
     };
     carregarDados();
@@ -121,7 +179,7 @@ const DashboardGarcom: React.FC = () => {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([buscarMesas(), buscarPedidosProntos()]);
+    await Promise.all([buscarMesas(), buscarPedidosProntos(), buscarItens()]);
     setRefreshing(false);
     handleMenuClose();
   };
@@ -139,14 +197,14 @@ const DashboardGarcom: React.FC = () => {
     navigate('/login');
   };
 
-  const handleMesaClick = (mesa: Mesa) => {
+  const handleMesaClick = async (mesa: Mesa) => {
     setSelectedMesa(mesa);
-    if (mesa.status === 'LIVRE') {
-      setNomeCliente('');
-      setDialogAbrirComandaOpen(true);
-    } else if (mesa.status === 'OCUPADA') {
-      setDialogMesaOcupadaOpen(true);
+
+    if (mesa.status === 'OCUPADA') {
+      await buscarComandaDaMesa(mesa.id);
     }
+
+    setDialogOpcoesMesaOpen(true);
   };
 
   const handleAbrirComanda = async () => {
@@ -160,17 +218,55 @@ const DashboardGarcom: React.FC = () => {
       });
 
       setDialogAbrirComandaOpen(false);
-      await buscarMesas(); // Refresh status
-      alert('Comanda aberta com sucesso!');
+      await buscarMesas();
     } catch (error: any) {
       console.error('Erro ao abrir comanda:', error);
-      if (error.response?.status === 403) {
-        alert('Erro 403: Sem permissão. Verifique se seu usuário é um Garçom e se o backend permite conexões externas (CORS).');
-      } else if (error.response?.status === 400) {
-        alert(`Erro: ${error.response.data}`);
-      } else {
-        alert('Erro ao abrir comanda. Tente novamente.');
-      }
+      alert('Erro ao abrir comanda. Tente novamente.');
+    }
+  };
+
+  const handleReservarMesa = async () => {
+    if (!selectedMesa) return;
+    try {
+      await api.put(`/api/mesas/${selectedMesa.id}/status`, { status: 'RESERVADA' });
+      setDialogOpcoesMesaOpen(false);
+      await buscarMesas();
+    } catch (error) {
+      console.error('Erro ao reservar mesa:', error);
+      alert('Erro ao reservar mesa.');
+    }
+  };
+
+  const handleLiberarMesa = async () => {
+    if (!selectedMesa) return;
+    try {
+      await api.put(`/api/mesas/${selectedMesa.id}/status`, { status: 'LIVRE' });
+      setDialogOpcoesMesaOpen(false);
+      await buscarMesas();
+    } catch (error) {
+      console.error('Erro ao liberar mesa:', error);
+      alert('Erro ao liberar mesa.');
+    }
+  };
+
+  const handleFecharComanda = async () => {
+    if (!selectedComandaId) {
+      alert('Nenhuma comanda ativa encontrada para fechar.');
+      return;
+    }
+    if (!window.confirm('Tem certeza que deseja fechar esta comanda? A mesa será liberada.')) {
+      return;
+    }
+
+    try {
+
+      await api.put(`/api/comandas/${selectedComandaId}/status`, { status: 'PAGA' });
+      setDialogOpcoesMesaOpen(false);
+      await buscarMesas();
+      alert('Comanda fechada com sucesso!');
+    } catch (error) {
+      console.error('Erro ao fechar comanda:', error);
+      alert('Erro ao fechar comanda.');
     }
   };
 
@@ -184,8 +280,71 @@ const DashboardGarcom: React.FC = () => {
     }
   };
 
+  const handleAbrirVerComanda = () => {
+    if (selectedComandaId) {
+      buscarPedidosDaComanda(selectedComandaId);
+      setDialogOpcoesMesaOpen(false);
+      setDialogVerComandaAberta(true);
+    } else {
+      alert('Erro: Comanda não encontrada.');
+    }
+  };
+
+  const handleAbrirAdicionarPedidos = () => {
+    setNovosItensPedido({});
+    setDialogOpcoesMesaOpen(false);
+    setDialogAdicionarPedidosAberta(true);
+  };
+
+  const handleAlterarQuantidade = (itemId: number, delta: number) => {
+    setNovosItensPedido((prev) => {
+      const current = prev[itemId] || { itemId, quantidade: 0, obs: '' };
+      const newQty = Math.max(0, current.quantidade + delta);
+
+      if (newQty === 0) {
+        const { [itemId]: _, ...rest } = prev;
+        return rest;
+      }
+
+      return { ...prev, [itemId]: { ...current, quantidade: newQty } };
+    });
+  };
+
+  const handleAlterarObs = (itemId: number, obs: string) => {
+    setNovosItensPedido((prev) => {
+      const current = prev[itemId] || { itemId, quantidade: 0, obs: '' };
+      return { ...prev, [itemId]: { ...current, obs } };
+    });
+  };
+
+  const handleEnviarPedidos = async () => {
+    if (!selectedComandaId || !user) return;
+
+    const pedidosParaEnviar = Object.values(novosItensPedido);
+    if (pedidosParaEnviar.length === 0) return;
+
+    try {
+      await Promise.all(pedidosParaEnviar.map(p =>
+        api.post('/api/pedidos', {
+          garcomId: user.id,
+          comandaId: selectedComandaId,
+          itemId: p.itemId,
+          quantidade: p.quantidade,
+          obs: p.obs
+        })
+      ));
+
+      setDialogAdicionarPedidosAberta(false);
+      setNovosItensPedido({});
+    } catch (error) {
+      console.error('Erro ao enviar pedidos:', error);
+      alert('Erro ao enviar alguns pedidos. Tente novamente.');
+    }
+  };
+
   const getStatusStyles = (status: string) => {
-    switch (status) {
+    const s = status ? status.toUpperCase() : '';
+    switch (s) {
       case 'LIVRE': return { bgcolor: '#C8E6C9', color: '#1B5E20' };
       case 'OCUPADA': return { bgcolor: '#FFCDD2', color: '#B71C1C' };
       case 'RESERVADA': return { bgcolor: '#FFF9C4', color: '#F57F17' };
@@ -266,7 +425,7 @@ const DashboardGarcom: React.FC = () => {
                   onClick={() => handleMesaClick(mesa)}
                   sx={{
                     position: 'relative',
-                    paddingTop: '100%', // Aspect Ratio 1:1
+                    paddingTop: '100%',
                     bgcolor: styles.bgcolor,
                     color: styles.color,
                     borderRadius: 3,
@@ -360,20 +519,200 @@ const DashboardGarcom: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      <Dialog open={dialogMesaOcupadaOpen} onClose={() => setDialogMesaOcupadaOpen(false)} fullWidth maxWidth="xs">
-        <DialogTitle sx={{ bgcolor: '#B71C1C', color: 'white' }}>
-          Mesa {selectedMesa?.numero} (Ocupada)
+      <Dialog open={dialogOpcoesMesaOpen} onClose={() => setDialogOpcoesMesaOpen(false)} fullWidth maxWidth="xs">
+        <DialogTitle sx={{ background: 'linear-gradient(135deg, #004D40 0%, #00695C 100%)', color: 'white' }}>
+          Mesa {selectedMesa?.numero} - {selectedMesa?.status}
         </DialogTitle>
-        <DialogContent sx={{ mt: 2, textAlign: 'center', py: 4 }}>
-          <Receipt sx={{ fontSize: 60, color: '#B71C1C', mb: 2 }} />
-          <Typography variant="h6">Gerenciar Pedidos</Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            Esta funcionalidade será implementada em breve.
-          </Typography>
-          <Button variant="outlined" color="error" onClick={() => setDialogMesaOcupadaOpen(false)}>
-            Fechar
-          </Button>
+        <DialogContent sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2, py: 4 }}>
+
+          {/* CASO 1: MESA LIVRE */}
+          {selectedMesa?.status === 'LIVRE' && (
+            <>
+              <Button
+                variant="contained"
+                startIcon={<AddCircle />}
+                onClick={() => {
+                  setDialogOpcoesMesaOpen(false);
+                  setNomeCliente('');
+                  setDialogAbrirComandaOpen(true);
+                }}
+                sx={{ bgcolor: '#1B5E20', py: 1.5 }}
+              >
+                Abrir Comanda
+              </Button>
+              <Button
+                variant="contained"
+                startIcon={<AccessTime />}
+                onClick={handleReservarMesa}
+                sx={{ bgcolor: '#F57F17', py: 1.5 }}
+              >
+                Reservar Mesa
+              </Button>
+            </>
+          )}
+
+          {/* CASO 2: MESA OCUPADA */}
+          {selectedMesa?.status === 'OCUPADA' && (
+            <>
+              <Button
+                variant="contained"
+                startIcon={<Visibility />}
+                onClick={handleAbrirVerComanda}
+                sx={{ bgcolor: '#1976D2', py: 1.5 }}
+              >
+                Ver Comanda
+              </Button>
+              <Button
+                variant="contained"
+                startIcon={<AddCircle />}
+                onClick={handleAbrirAdicionarPedidos}
+                sx={{ bgcolor: '#4CAF50', py: 1.5 }}
+              >
+                Adicionar Pedidos
+              </Button>
+              <Button
+                variant="contained"
+                startIcon={<Receipt />}
+                onClick={handleFecharComanda}
+                sx={{ bgcolor: '#D32F2F', py: 1.5 }}
+              >
+                Fechar Comanda
+              </Button>
+            </>
+          )}
+
+          {/* CASO 3: MESA RESERVADA */}
+          {selectedMesa?.status === 'RESERVADA' && (
+            <>
+              <Button
+                variant="contained"
+                startIcon={<AddCircle />}
+                onClick={() => {
+                  setDialogOpcoesMesaOpen(false);
+                  setNomeCliente('');
+                  setDialogAbrirComandaOpen(true);
+                }}
+                sx={{ bgcolor: '#1B5E20', py: 1.5 }}
+              >
+                Abrir Comanda
+              </Button>
+              <Button
+                variant="contained"
+                startIcon={<CheckCircle />}
+                onClick={handleLiberarMesa}
+                sx={{ bgcolor: '#1B5E20', py: 1.5 }}
+              >
+                Liberar Mesa
+              </Button>
+            </>
+          )}
+
         </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDialogOpcoesMesaOpen(false)}>Fechar</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={dialogVerComandaAberta} onClose={() => setDialogVerComandaAberta(false)} fullWidth maxWidth="sm">
+        <DialogTitle sx={{ bgcolor: '#1976D2', color: 'white' }}>
+          Comanda - Mesa {selectedMesa?.numero}
+        </DialogTitle>
+        <DialogContent sx={{ mt: 2, p: 0 }}>
+          {!Array.isArray(comandaPedidos) || comandaPedidos.length === 0 ? (
+            <Box sx={{ p: 4, textAlign: 'center' }}>
+              <Typography color="text.secondary">Nenhum pedido realizado nesta comanda.</Typography>
+            </Box>
+          ) : (
+            <List>
+              {comandaPedidos.map((pedido) => (
+                <React.Fragment key={pedido.id}>
+                  <ListItem>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                      <Box>
+                        <Typography variant="body1">{pedido.item?.nome || 'Item removido'}</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {pedido.item?.categoria || ''}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ textAlign: 'right' }}>
+                        <Typography variant="body2">Qtd: {pedido.quantidade}</Typography>
+                        <Chip
+                          label={pedido.status}
+                          size="small"
+                          color={pedido.status === 'PRONTO' ? 'success' : 'default'}
+                          sx={{ mt: 0.5 }}
+                        />
+                      </Box>
+                    </Box>
+                  </ListItem>
+                  <Divider />
+                </React.Fragment>
+              ))}
+            </List>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDialogVerComandaAberta(false)}>Fechar</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={dialogAdicionarPedidosAberta} onClose={() => setDialogAdicionarPedidosAberta(false)} fullWidth maxWidth="md">
+        <DialogTitle sx={{ bgcolor: '#4CAF50', color: 'white' }}>
+          Adicionar Pedidos - Mesa {selectedMesa?.numero}
+        </DialogTitle>
+        <DialogContent sx={{ mt: 2 }}>
+          <Grid container spacing={2}>
+            {menuItems.map((item) => {
+              const currentQty = novosItensPedido[item.id]?.quantidade || 0;
+              return (
+                <Grid item xs={12} sm={6} key={item.id}>
+                  <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Typography fontWeight="bold">{item.nome}</Typography>
+                      <Typography color="primary" fontWeight="bold">R$ {item.preco.toFixed(2)}</Typography>
+                    </Box>
+                    <Typography variant="caption" color="text.secondary">{item.categoria}</Typography>
+
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <IconButton size="small" onClick={() => handleAlterarQuantidade(item.id, -1)} disabled={currentQty === 0}>
+                          <Remove />
+                        </IconButton>
+                        <Typography fontWeight="bold">{currentQty}</Typography>
+                        <IconButton size="small" onClick={() => handleAlterarQuantidade(item.id, 1)}>
+                          <Add />
+                        </IconButton>
+                      </Box>
+                    </Box>
+
+                    {currentQty > 0 && (
+                      <TextField
+                        size="small"
+                        placeholder="Observações:"
+                        fullWidth
+                        value={novosItensPedido[item.id]?.obs || ''}
+                        onChange={(e) => handleAlterarObs(item.id, e.target.value)}
+                        sx={{ mt: 1 }}
+                      />
+                    )}
+                  </Paper>
+                </Grid>
+              );
+            })}
+          </Grid>
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={() => setDialogAdicionarPedidosAberta(false)} color="inherit">Cancelar</Button>
+          <Button
+            onClick={handleEnviarPedidos}
+            variant="contained"
+            color="success"
+            startIcon={<Send />}
+            disabled={Object.keys(novosItensPedido).length === 0}
+          >
+            Enviar Pedidos
+          </Button>
+        </DialogActions>
       </Dialog>
 
       <Dialog

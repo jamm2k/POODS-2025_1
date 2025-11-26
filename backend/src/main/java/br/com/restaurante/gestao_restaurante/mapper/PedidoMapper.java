@@ -26,6 +26,17 @@ public class PedidoMapper {
         dto.setQuantidade(pedido.getQuantidade());
         dto.setObs(pedido.getObs());
         dto.setStatus(pedido.getStatus());
+
+        if (pedido.getItem() != null) {
+            br.com.restaurante.gestao_restaurante.dto.item.ItemResponseDTO itemDto = new br.com.restaurante.gestao_restaurante.dto.item.ItemResponseDTO();
+            itemDto.setId(pedido.getItem().getId());
+            itemDto.setNome(pedido.getItem().getNome());
+            itemDto.setPreco(pedido.getItem().getPreco());
+            itemDto.setCategoria(pedido.getItem().getCategoria());
+            itemDto.setTipo(pedido.getItem().getTipo());
+            dto.setItem(itemDto);
+        }
+
         return dto;
     }
 }

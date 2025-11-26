@@ -1,5 +1,6 @@
 package br.com.restaurante.gestao_restaurante.dto.pedido;
 
+import br.com.restaurante.gestao_restaurante.dto.item.ItemResponseDTO;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -15,4 +16,5 @@ public class PedidoResponseDTO {
     private Integer quantidade;
     private String obs;
     private String status;
+    private ItemResponseDTO item;
 }

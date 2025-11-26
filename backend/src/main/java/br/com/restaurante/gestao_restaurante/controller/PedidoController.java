@@ -22,89 +22,78 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-
-
-
-
 @RestController
 @RequestMapping("/api/pedidos")
 public class PedidoController {
     @Autowired
     PedidoService pedidoService;
-    
+
     @GetMapping
     public ResponseEntity<List<PedidoResponseDTO>> buscarTodosPedidos(
-        @RequestParam(required = false) String status, 
-        @RequestParam(required = false) Long comandaId,
-        @RequestParam(required = false) Long garcomId
-    ) {
-            
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Long comandaId,
+            @RequestParam(required = false) Long garcomId) {
+
         List<PedidoResponseDTO> pedidos;
 
-        if (status != null && !status.isEmpty()){
+        if (status != null && !status.isEmpty()) {
             pedidos = pedidoService.buscarPedidoPorStatus(status);
-        }else{
-            pedidos = pedidoService.findAllPedidos();
-        }
-
-        if (comandaId != null){
+        } else if (comandaId != null) {
             pedidos = pedidoService.findPedidosByComanda(comandaId);
-        }else{
+        } else if (garcomId != null) {
+            pedidos = pedidoService.findPedidosByGarcom(garcomId);
+        } else {
             pedidos = pedidoService.findAllPedidos();
         }
 
-        if(garcomId != null){
-            pedidos = pedidoService.findPedidosByGarcom(garcomId);
-        }else{
-            pedidos = pedidoService.findAllPedidos();
-        }
-        
         return ResponseEntity.ok(pedidos);
     }
-    
+
     @GetMapping("/{id}")
     public ResponseEntity<PedidoResponseDTO> buscarPedidoId(@PathVariable Long id) {
-        return ResponseEntity.ok(pedidoService.findByIdPedido(id));   
+        return ResponseEntity.ok(pedidoService.findByIdPedido(id));
     }
 
     @PostMapping
-    public ResponseEntity <PedidoResponseDTO> criarPedido(@RequestBody PedidoCreateDTO pedidoDTO) {
+    public ResponseEntity<PedidoResponseDTO> criarPedido(@RequestBody PedidoCreateDTO pedidoDTO) {
         PedidoResponseDTO pedidoNovo = pedidoService.criarNovoPedido(pedidoDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(pedidoNovo);
     }
-    
 
     @PutMapping("/{id}")
-    public ResponseEntity<PedidoResponseDTO> atualizarPedido(@PathVariable Long id, @RequestBody PedidoUpdateDTO pedidoDTO) {
+    public ResponseEntity<PedidoResponseDTO> atualizarPedido(@PathVariable Long id,
+            @RequestBody PedidoUpdateDTO pedidoDTO) {
         PedidoResponseDTO pedidoAtualizado = pedidoService.atualizarPedido(id, pedidoDTO);
         return ResponseEntity.ok(pedidoAtualizado);
     }
 
     @PutMapping("/{id}/status")
-    public ResponseEntity<PedidoResponseDTO> AtualizarStatusPedido(@PathVariable Long id, @RequestParam PedidoUpdateStatusDTO status) {
-        PedidoResponseDTO pedidoAtualizado = pedidoService.atualizarStatusPedido(id, status);        
+    public ResponseEntity<PedidoResponseDTO> AtualizarStatusPedido(@PathVariable Long id,
+            @RequestParam PedidoUpdateStatusDTO status) {
+        PedidoResponseDTO pedidoAtualizado = pedidoService.atualizarStatusPedido(id, status);
         return ResponseEntity.ok(pedidoAtualizado);
     }
 
     @PutMapping("/{id}/atribuir-cozinheiro")
-    public ResponseEntity<PedidoResponseDTO> atribuirCozinheiro(@PathVariable Long id, @RequestBody CozinheiroCreateDTO dto) {
+    public ResponseEntity<PedidoResponseDTO> atribuirCozinheiro(@PathVariable Long id,
+            @RequestBody CozinheiroCreateDTO dto) {
         PedidoResponseDTO pedido = pedidoService.atribuirCozinheiro(id, dto.getCozinheiroId());
         return ResponseEntity.ok(pedido);
     }
 
     @PutMapping("/{id}/atribuir-barman")
-    public ResponseEntity<PedidoResponseDTO> atribuirBarman(@PathVariable Long id, @RequestBody br.com.restaurante.gestao_restaurante.dto.barman.BarmanCreateDTO dto) {
+    public ResponseEntity<PedidoResponseDTO> atribuirBarman(@PathVariable Long id,
+            @RequestBody br.com.restaurante.gestao_restaurante.dto.barman.BarmanCreateDTO dto) {
         PedidoResponseDTO pedido = pedidoService.atribuirBarman(id, dto.getBarmanId());
         return ResponseEntity.ok(pedido);
     }
-    
+
     @PutMapping("/{id}/concluir")
     public ResponseEntity<PedidoResponseDTO> concluirPedido(@PathVariable Long id) {
         PedidoResponseDTO pedidoAtual = pedidoService.findByIdPedido(id);
         PedidoResponseDTO pedido = pedidoService.concluirPedido(
-            id, 
-            pedidoAtual.getCozinheiroId()
-        );
+                id,
+                pedidoAtual.getCozinheiroId());
         return ResponseEntity.ok(pedido);
     }
 
@@ -112,20 +101,19 @@ public class PedidoController {
     public ResponseEntity<PedidoResponseDTO> concluirPedidoBarman(@PathVariable Long id) {
         PedidoResponseDTO pedidoAtual = pedidoService.findByIdPedido(id);
         PedidoResponseDTO pedido = pedidoService.concluirPedidoBarman(
-            id, 
-            pedidoAtual.getBarmanId()
-        );
+                id,
+                pedidoAtual.getBarmanId());
         return ResponseEntity.ok(pedido);
     }
 
     @PutMapping("/{id}/entregar")
     public ResponseEntity<PedidoResponseDTO> entregarPedido(@PathVariable Long id) {
-        PedidoResponseDTO pedido = pedidoService.marcarPedidoEntregue(id);        
+        PedidoResponseDTO pedido = pedidoService.marcarPedidoEntregue(id);
         return ResponseEntity.ok(pedido);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletarPedido(@PathVariable Long id){
+    public ResponseEntity<Void> deletarPedido(@PathVariable Long id) {
         pedidoService.deletarPedido(id);
         return ResponseEntity.noContent().build();
     }

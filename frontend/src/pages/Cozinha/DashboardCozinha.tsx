@@ -483,7 +483,7 @@ const DashboardCozinha: React.FC = () => {
                       }}
                     >
                       <Typography variant="h6" fontWeight="bold">
-                        Mesa {pedido.comanda.mesa.numero}
+                        Mesa {pedido.comanda?.mesa?.numero || '?'}
                       </Typography>
                       <Chip
                         label="EM PREPARO"
