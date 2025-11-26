@@ -15,7 +15,7 @@ SELECT setval('cardapios_id_seq', (SELECT MAX(id) FROM cardapios));
 
 -- 1. Garçom Padrão
 INSERT INTO usuarios (id, nome, email, senha, cpf, tipo_usuario) VALUES 
-(1, 'João Luiz', 'garcom@restaurante.com', '$2a$12$TuH3jX/b3wLGAWVa8Bhh8eDZuW2XM6usKSWM1XHMVgWh4HQZHD2l.', '111.111.111-11', 'GARCOM');
+(1, 'João Luiz', 'garcom@restaurante.com', '$2a$12$M4l91Rdn8/4eJ9xbvvjLT.dv9MKUWvFKX9F8Bj/zSjKUPyXbWSPsO', '111.111.111-11', 'GARCOM');
 
 INSERT INTO funcionarios (usuario_id, matricula, data_admissao, salario) VALUES 
 (1, 'GARC001', CURRENT_DATE, 2500.00);
@@ -25,7 +25,7 @@ INSERT INTO garcons (funcionario_id, bonus) VALUES
 
 -- 2. Cozinheiro Padrão
 INSERT INTO usuarios (id, nome, email, senha, cpf, tipo_usuario) VALUES 
-(2, 'Maria Santos', 'cozinheiro@restaurante.com', '$2a$12$TuH3jX/b3wLGAWVa8Bhh8eDZuW2XM6usKSWM1XHMVgWh4HQZHD2l.', '222.222.222-22', 'COZINHEIRO');
+(2, 'Maria Santos', 'cozinheiro@restaurante.com', '$2a$12$M4l91Rdn8/4eJ9xbvvjLT.dv9MKUWvFKX9F8Bj/zSjKUPyXbWSPsO', '222.222.222-22', 'COZINHEIRO');
 
 INSERT INTO funcionarios (usuario_id, matricula, data_admissao, salario) VALUES 
 (2, 'COZI001', CURRENT_DATE, 3000.00);
@@ -35,7 +35,7 @@ INSERT INTO cozinheiros (funcionario_id, status) VALUES
 
 -- 3. Barman Padrão
 INSERT INTO usuarios (id, nome, email, senha, cpf, tipo_usuario) VALUES 
-(3, 'Carlos Oliveira', 'barman@restaurante.com', '$2a$12$TuH3jX/b3wLGAWVa8Bhh8eDZuW2XM6usKSWM1XHMVgWh4HQZHD2l.', '333.333.333-33', 'BARMAN');
+(3, 'Carlos Oliveira', 'barman@restaurante.com', '$2a$12$M4l91Rdn8/4eJ9xbvvjLT.dv9MKUWvFKX9F8Bj/zSjKUPyXbWSPsO', '333.333.333-33', 'BARMAN');
 
 INSERT INTO funcionarios (usuario_id, matricula, data_admissao, salario) VALUES 
 (3, 'BARM001', CURRENT_DATE, 2800.00);
