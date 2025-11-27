@@ -1,6 +1,0 @@
-/database/*.db
-/database/*.mv.db
-/database/*.trace.db
-/database/*.sqlite
-/database/*.bak
-/database/logs/
