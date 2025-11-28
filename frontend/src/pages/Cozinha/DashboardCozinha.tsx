@@ -30,59 +30,30 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import api from '../../services/api';
+import cozinhaService from '../../services/cozinhaService';
+import { CozinheiroResponseDTO } from '../../dto/cozinheiro/CozinheiroResponseDTO';
+import { PedidoResponseDTO } from '../../dto/pedido/PedidoResponseDTO';
 
-interface Cozinheiro {
-  id: number;
-  nome: string;
-  status: 'LIVRE' | 'OCUPADO';
-}
-
-interface Pedido {
-  id: number;
-  item: {
-    id: number;
-    nome: string;
-    categoria: string;
-    tempoPreparo?: number;
-  };
-  quantidade: number;
-  status: string;
-  obs?: string;
-  comanda: {
-    id: number;
-    nome: string;
-    mesa: {
-      numero: number;
-    };
-  };
-  cozinheiro?: {
-    id: number;
-    nome: string;
-  };
-  garcom: {
-    id: number;
-    nome: string;
-  };
-  tempoDecorrido?: number; // calculado no frontend
-  dataInicio?: Date; // quando começou o preparo
+interface PedidoWithTimer extends PedidoResponseDTO {
+  tempoDecorrido?: number;
+  dataInicio?: Date;
 }
 
 const DashboardCozinha: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const [pedidosSolicitados, setPedidosSolicitados] = useState<Pedido[]>([]);
-  const [pedidosEmPreparo, setPedidosEmPreparo] = useState<Pedido[]>([]);
-  const [cozinheiros, setCozinheiros] = useState<Cozinheiro[]>([]);
+  const [pedidosSolicitados, setPedidosSolicitados] = useState<PedidoWithTimer[]>([]);
+  const [pedidosEmPreparo, setPedidosEmPreparo] = useState<PedidoWithTimer[]>([]);
+  const [cozinheiros, setCozinheiros] = useState<CozinheiroResponseDTO[]>([]);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [loading, setLoading] = useState(true);
   const [timers, setTimers] = useState<{ [key: number]: number }>({});
 
   const buscarCozinheiros = async () => {
     try {
-      const response = await api.get('/api/cozinheiros');
-      setCozinheiros(response.data);
+      const data = await cozinhaService.getCozinheiros();
+      setCozinheiros(data);
     } catch (error) {
       console.error('Erro ao buscar cozinheiros:', error);
     }
@@ -90,22 +61,13 @@ const DashboardCozinha: React.FC = () => {
 
   const buscarPedidos = async () => {
     try {
-      const [solicitadosRes, preparoRes] = await Promise.all([
-        api.get('/api/pedidos', { params: { status: 'SOLICITADO' } }),
-        api.get('/api/pedidos', { params: { status: 'EM PREPARO' } }),
+      const [solicitados, preparo] = await Promise.all([
+        cozinhaService.getPedidosSolicitados(),
+        cozinhaService.getPedidosEmPreparo(),
       ]);
 
-      // apenas pedidos de comida (não drinks)
-      const filtrarPedidosComida = (pedidos: Pedido[]) =>
-        pedidos.filter(
-          (p) =>
-            p.item.categoria !== 'BEBIDA' &&
-            p.item.categoria !== 'DRINK' &&
-            p.item.categoria !== 'DRINKS'
-        );
-
-      setPedidosSolicitados(filtrarPedidosComida(solicitadosRes.data));
-      setPedidosEmPreparo(filtrarPedidosComida(preparoRes.data));
+      setPedidosSolicitados(cozinhaService.filtrarPedidosComida(solicitados));
+      setPedidosEmPreparo(cozinhaService.filtrarPedidosComida(preparo));
     } catch (error) {
       console.error('Erro ao buscar pedidos:', error);
     }
@@ -177,7 +139,7 @@ const DashboardCozinha: React.FC = () => {
         return;
       }
 
-      await api.put(`/api/pedidos/api/${pedidoId}/atribuir-cozinheiro`, cozinheiro.id);
+      await cozinhaService.iniciarPreparo(pedidoId, cozinheiro.id);
 
       setTimers((prev) => ({ ...prev, [pedidoId]: 0 })); //inicia o timer
 
@@ -191,7 +153,7 @@ const DashboardCozinha: React.FC = () => {
 
   const handleConcluirPreparo = async (pedidoId: number, cozinheiroId: number) => {
     try {
-      await api.put(`/api/pedidos/api/${pedidoId}/concluir`, { cozinheiroId });
+      await cozinhaService.concluirPreparo(pedidoId, cozinheiroId);
 
       setTimers((prev) => {
         const newTimers = { ...prev };
@@ -381,7 +343,7 @@ const DashboardCozinha: React.FC = () => {
                       }}
                     >
                       <Typography variant="h6" fontWeight="bold">
-                        Mesa {pedido.comanda.mesa.numero}
+                        Comanda #{pedido.comandaId}
                       </Typography>
                       <Chip label="PENDENTE" color="error" size="small" sx={{ fontWeight: 'bold' }} />
                     </Box>
@@ -393,14 +355,7 @@ const DashboardCozinha: React.FC = () => {
                     <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
                       <Chip label={pedido.item.categoria} size="small" color="primary" />
                       <Chip label={`Qtd: ${pedido.quantidade}`} size="small" variant="outlined" />
-                      {pedido.item.tempoPreparo && (
-                        <Chip
-                          icon={<Timer />}
-                          label={`${pedido.item.tempoPreparo} min`}
-                          size="small"
-                          variant="outlined"
-                        />
-                      )}
+
                     </Box>
 
                     {pedido.obs && (
@@ -420,7 +375,7 @@ const DashboardCozinha: React.FC = () => {
                     )}
 
                     <Typography variant="caption" color="text.secondary" display="block" mb={2}>
-                      Garçom: {pedido.garcom.nome}
+                      Garçom ID: {pedido.garcomId}
                     </Typography>
 
                     <Button
@@ -483,7 +438,7 @@ const DashboardCozinha: React.FC = () => {
                       }}
                     >
                       <Typography variant="h6" fontWeight="bold">
-                        Mesa {pedido.comanda?.mesa?.numero || '?'}
+                        Mesa {pedido.comandaId}
                       </Typography>
                       <Chip
                         label="EM PREPARO"
@@ -501,7 +456,7 @@ const DashboardCozinha: React.FC = () => {
                       sx={{
                         p: 2,
                         mb: 2,
-                        bgcolor: getCorTempo(timers[pedido.id] || 0, pedido.item.tempoPreparo),
+                        bgcolor: getCorTempo(timers[pedido.id] || 0),
                         color: 'white',
                         textAlign: 'center',
                         borderRadius: 2,
@@ -511,11 +466,7 @@ const DashboardCozinha: React.FC = () => {
                       <Typography variant="h4" fontWeight="bold">
                         {formatarTempo(timers[pedido.id] || 0)}
                       </Typography>
-                      {pedido.item.tempoPreparo && (
-                        <Typography variant="caption">
-                          Tempo esperado: {pedido.item.tempoPreparo} min
-                        </Typography>
-                      )}
+
                     </Paper>
 
                     <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
@@ -540,10 +491,10 @@ const DashboardCozinha: React.FC = () => {
                     )}
 
                     <Typography variant="caption" color="text.secondary" display="block" mb={1}>
-                      Cozinheiro: {pedido.cozinheiro?.nome}
+                      Cozinheiro: {cozinheiros.find(c => c.id === pedido.cozinheiroId)?.nome || pedido.cozinheiroId}
                     </Typography>
                     <Typography variant="caption" color="text.secondary" display="block" mb={2}>
-                      Garçom: {pedido.garcom.nome}
+                      Garçom ID: {pedido.garcomId}
                     </Typography>
 
                     <Button
@@ -552,7 +503,7 @@ const DashboardCozinha: React.FC = () => {
                       startIcon={<CheckCircle />}
                       fullWidth
                       onClick={() =>
-                        handleConcluirPreparo(pedido.id, pedido.cozinheiro?.id || 0)
+                        handleConcluirPreparo(pedido.id, pedido.cozinheiroId || 0)
                       }
                       sx={{
                         fontWeight: 'bold',

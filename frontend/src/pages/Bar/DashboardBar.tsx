@@ -30,15 +30,22 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import barService, { Barman, Pedido } from '../../services/barService';
+import barService from '../../services/barService';
+import { BarmanResponseDTO } from '../../dto/barman/BarmanResponseDTO';
+import { PedidoResponseDTO } from '../../dto/pedido/PedidoResponseDTO';
+
+interface PedidoWithTimer extends PedidoResponseDTO {
+  tempoDecorrido?: number;
+  dataInicio?: Date;
+}
 
 const DashboardBar: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const [pedidosSolicitados, setPedidosSolicitados] = useState<Pedido[]>([]);
-  const [pedidosEmPreparo, setPedidosEmPreparo] = useState<Pedido[]>([]);
-  const [barmen, setBarmen] = useState<Barman[]>([]);
+  const [pedidosSolicitados, setPedidosSolicitados] = useState<PedidoWithTimer[]>([]);
+  const [pedidosEmPreparo, setPedidosEmPreparo] = useState<PedidoWithTimer[]>([]);
+  const [barmen, setBarmen] = useState<BarmanResponseDTO[]>([]);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [loading, setLoading] = useState(true);
   const [timers, setTimers] = useState<{ [key: number]: number }>({});
@@ -168,14 +175,8 @@ const DashboardBar: React.FC = () => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const getCorTempo = (segundos: number, tempoEsperado?: number) => {
-    if (!tempoEsperado) return '#2196F3';
-
-    const porcentagem = (segundos / (tempoEsperado * 60)) * 100;
-
-    if (porcentagem < 70) return '#4CAF50';
-    if (porcentagem < 100) return '#FFA726';
-    return '#EF5350';
+  const getCorTempo = (segundos: number) => {
+    return '#2196F3';
   };
 
   if (loading) {
@@ -335,7 +336,7 @@ const DashboardBar: React.FC = () => {
                       }}
                     >
                       <Typography variant="h6" fontWeight="bold">
-                        Mesa {pedido.comanda.mesa.numero}
+                        Comanda #{pedido.comandaId}
                       </Typography>
                       <Chip label="PENDENTE" color="error" size="small" sx={{ fontWeight: 'bold' }} />
                     </Box>
@@ -358,14 +359,8 @@ const DashboardBar: React.FC = () => {
                         }}
                       />
                       <Chip label={`Qtd: ${pedido.quantidade}`} size="small" variant="outlined" />
-                      {pedido.item.tempoPreparo && (
-                        <Chip
-                          icon={<Timer />}
-                          label={`${pedido.item.tempoPreparo} min`}
-                          size="small"
-                          variant="outlined"
-                        />
-                      )}
+                      <Chip label={`Qtd: ${pedido.quantidade}`} size="small" variant="outlined" />
+
                     </Box>
 
                     {pedido.obs && (
@@ -385,7 +380,7 @@ const DashboardBar: React.FC = () => {
                     )}
 
                     <Typography variant="caption" color="text.secondary" display="block" mb={2}>
-                      Garçom: {pedido.garcom.nome}
+                      Garçom ID: {pedido.garcomId}
                     </Typography>
 
                     <Button
@@ -448,7 +443,7 @@ const DashboardBar: React.FC = () => {
                       }}
                     >
                       <Typography variant="h6" fontWeight="bold">
-                        Mesa {pedido.comanda.mesa.numero}
+                        Mesa {pedido.comandaId}
                       </Typography>
                       <Chip
                         label="EM PREPARO"
@@ -469,7 +464,7 @@ const DashboardBar: React.FC = () => {
                       sx={{
                         p: 2,
                         mb: 2,
-                        bgcolor: getCorTempo(timers[pedido.id] || 0, pedido.item.tempoPreparo),
+                        bgcolor: getCorTempo(timers[pedido.id] || 0),
                         color: 'white',
                         textAlign: 'center',
                         borderRadius: 2,
@@ -479,11 +474,7 @@ const DashboardBar: React.FC = () => {
                       <Typography variant="h4" fontWeight="bold">
                         {formatarTempo(timers[pedido.id] || 0)}
                       </Typography>
-                      {pedido.item.tempoPreparo && (
-                        <Typography variant="caption">
-                          Tempo esperado: {pedido.item.tempoPreparo} min
-                        </Typography>
-                      )}
+
                     </Paper>
 
                     <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
@@ -516,10 +507,10 @@ const DashboardBar: React.FC = () => {
                     )}
 
                     <Typography variant="caption" color="text.secondary" display="block" mb={1}>
-                      Barman: {pedido.barman?.nome}
+                      Barman: {barmen.find(b => b.id === pedido.barmanId)?.nome || pedido.barmanId}
                     </Typography>
                     <Typography variant="caption" color="text.secondary" display="block" mb={2}>
-                      Garçom: {pedido.garcom.nome}
+                      Garçom ID: {pedido.garcomId}
                     </Typography>
 
                     <Button
@@ -528,7 +519,7 @@ const DashboardBar: React.FC = () => {
                       startIcon={<CheckCircle />}
                       fullWidth
                       onClick={() =>
-                        handleConcluirPreparo(pedido.id, pedido.barman?.id || 0)
+                        handleConcluirPreparo(pedido.id, pedido.barmanId || 0)
                       }
                       sx={{
                         fontWeight: 'bold',

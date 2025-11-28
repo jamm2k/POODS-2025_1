@@ -1,63 +1,28 @@
 import api from './api';
+import { CozinheiroResponseDTO } from '../dto/cozinheiro/CozinheiroResponseDTO';
+import { PedidoResponseDTO } from '../dto/pedido/PedidoResponseDTO';
+import { CozinheiroUpdateStatusDTO } from '../dto/cozinheiro/CozinheiroUpdateStatusDTO';
+import { PedidoUpdateStatusDTO } from '../dto/pedido/PedidoUpdateStatusDTO';
 
-export interface Cozinheiro {
-  id: number;
-  nome: string;
-  email: string;
-  cpf: string;
-  matricula: string;
-  dataAdmissao: string;
-  salario: number;
-  status: 'LIVRE' | 'OCUPADO';
-}
 
-export interface Pedido {
-  id: number;
-  item: {
-    id: number;
-    nome: string;
-    preco: number;
-    categoria: string;
-    tempoPreparo?: number;
-  };
-  quantidade: number;
-  status: string;
-  obs?: string;
-  comanda: {
-    id: number;
-    nome: string;
-    status: string;
-    mesa: {
-      id: number;
-      numero: number;
-    };
-  };
-  cozinheiro?: {
-    id: number;
-    nome: string;
-  };
-  garcom: {
-    id: number;
-    nome: string;
-  };
-}
 
 class CozinhaService {
 
-  async getCozinheiros(): Promise<Cozinheiro[]> {
+  async getCozinheiros(): Promise<CozinheiroResponseDTO[]> {
     const response = await api.get('/api/cozinheiros');
     return response.data;
   }
-  async getCozinheiroById(id: number): Promise<Cozinheiro> {
+  async getCozinheiroById(id: number): Promise<CozinheiroResponseDTO> {
     const response = await api.get(`/api/cozinheiros/${id}`);
     return response.data;
   }
 
-  async atualizarStatusCozinheiro(id: number, status: 'LIVRE' | 'OCUPADO'): Promise<void> {
-    await api.put(`/api/cozinheiros/${id}/status`, { status });
+  async atualizarStatusCozinheiro(id: number, status: string): Promise<void> {
+    const dto: CozinheiroUpdateStatusDTO = { status };
+    await api.put(`/api/cozinheiros/${id}/status`, dto);
   }
 
-  async getPedidosByStatus(status: string): Promise<Pedido[]> {
+  async getPedidosByStatus(status: string): Promise<PedidoResponseDTO[]> {
     const response = await api.get('/api/pedidos', {
       params: { status }
     });
@@ -65,20 +30,20 @@ class CozinhaService {
   }
 
 
-  async getPedidosSolicitados(): Promise<Pedido[]> {
+  async getPedidosSolicitados(): Promise<PedidoResponseDTO[]> {
     return this.getPedidosByStatus('SOLICITADO');
   }
 
-  async getPedidosEmPreparo(): Promise<Pedido[]> {
+  async getPedidosEmPreparo(): Promise<PedidoResponseDTO[]> {
     return this.getPedidosByStatus('EM PREPARO');
   }
 
-  async getPedidosProntos(): Promise<Pedido[]> {
+  async getPedidosProntos(): Promise<PedidoResponseDTO[]> {
     return this.getPedidosByStatus('PRONTO');
   }
 
 
-  async iniciarPreparo(pedidoId: number, cozinheiroId: number): Promise<Pedido> {
+  async iniciarPreparo(pedidoId: number, cozinheiroId: number): Promise<PedidoResponseDTO> {
     const response = await api.put(
       `/api/pedidos/api/${pedidoId}/atribuir-cozinheiro`,
       cozinheiroId
@@ -86,32 +51,33 @@ class CozinhaService {
     return response.data;
   }
 
-  async concluirPreparo(pedidoId: number, cozinheiroId: number): Promise<Pedido> {
+  async concluirPreparo(pedidoId: number, cozinheiroId: number): Promise<PedidoResponseDTO> {
     const response = await api.put(`/api/pedidos/api/${pedidoId}/concluir`, {
       cozinheiroId
     });
     return response.data;
   }
 
-  async atualizarStatusPedido(pedidoId: number, status: string): Promise<Pedido> {
-    const response = await api.put(`/api/pedidos/${pedidoId}/status`, {
-      statusPedido: status
+  async atualizarStatusPedido(pedidoId: number, status: string): Promise<PedidoResponseDTO> {
+    const dto: PedidoUpdateStatusDTO = { statusPedido: status };
+    const response = await api.put(`/api/pedidos/${pedidoId}/status`, null, {
+      params: dto
     });
     return response.data;
   }
 
-  async getPedidoById(id: number): Promise<Pedido> {
+  async getPedidoById(id: number): Promise<PedidoResponseDTO> {
     const response = await api.get(`/api/pedidos/${id}`);
     return response.data;
   }
 
-  async getCozinheiroMaisLivre(): Promise<Cozinheiro | null> {
+  async getCozinheiroMaisLivre(): Promise<CozinheiroResponseDTO | null> {
     const cozinheiros = await this.getCozinheiros();
     const livres = cozinheiros.filter(c => c.status === 'LIVRE');
     return livres.length > 0 ? livres[0] : null;
   }
 
-  filtrarPedidosComida(pedidos: Pedido[]): Pedido[] {
+  filtrarPedidosComida(pedidos: PedidoResponseDTO[]): PedidoResponseDTO[] {
     return pedidos.filter(
       p =>
         p.item.categoria !== 'BEBIDA' &&
@@ -120,7 +86,7 @@ class CozinhaService {
     );
   }
 
-  filtrarPedidosBebidas(pedidos: Pedido[]): Pedido[] {
+  filtrarPedidosBebidas(pedidos: PedidoResponseDTO[]): PedidoResponseDTO[] {
     return pedidos.filter(
       p =>
         p.item.categoria === 'BEBIDA' ||

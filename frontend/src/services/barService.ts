@@ -1,63 +1,28 @@
 import api from './api';
+import { BarmanResponseDTO } from '../dto/barman/BarmanResponseDTO';
+import { PedidoResponseDTO } from '../dto/pedido/PedidoResponseDTO';
+import { BarmanUpdateStatusDTO } from '../dto/barman/BarmanUpdateStatusDTO';
+import { PedidoUpdateStatusDTO } from '../dto/pedido/PedidoUpdateStatusDTO';
 
-export interface Barman {
-    id: number;
-    nome: string;
-    email: string;
-    cpf: string;
-    matricula: string;
-    dataAdmissao: string;
-    salario: number;
-    status: 'LIVRE' | 'OCUPADO';
-}
 
-export interface Pedido {
-    id: number;
-    item: {
-        id: number;
-        nome: string;
-        preco: number;
-        categoria: string;
-        tempoPreparo?: number;
-    };
-    quantidade: number;
-    status: string;
-    obs?: string;
-    comanda: {
-        id: number;
-        nome: string;
-        status: string;
-        mesa: {
-            id: number;
-            numero: number;
-        };
-    };
-    barman?: {
-        id: number;
-        nome: string;
-    };
-    garcom: {
-        id: number;
-        nome: string;
-    };
-}
 
 class BarService {
 
-    async getBarmen(): Promise<Barman[]> {
+    async getBarmen(): Promise<BarmanResponseDTO[]> {
         const response = await api.get('/api/barmen');
         return response.data;
     }
-    async getBarmanById(id: number): Promise<Barman> {
+    async getBarmanById(id: number): Promise<BarmanResponseDTO> {
         const response = await api.get(`/api/barmen/${id}`);
         return response.data;
     }
 
-    async atualizarStatusBarman(id: number, status: 'LIVRE' | 'OCUPADO'): Promise<void> {
-        await api.put(`/api/barmen/${id}/status`, { status });
+    async atualizarStatusBarman(id: number, status: string): Promise<void> {
+        const dto: BarmanUpdateStatusDTO = { status };
+        await api.put(`/api/barmen/${id}/status`, dto);
     }
 
-    async getPedidosByStatus(status: string): Promise<Pedido[]> {
+    async getPedidosByStatus(status: string): Promise<PedidoResponseDTO[]> {
         const response = await api.get('/api/pedidos', {
             params: { status }
         });
@@ -65,20 +30,20 @@ class BarService {
     }
 
 
-    async getPedidosSolicitados(): Promise<Pedido[]> {
+    async getPedidosSolicitados(): Promise<PedidoResponseDTO[]> {
         return this.getPedidosByStatus('SOLICITADO');
     }
 
-    async getPedidosEmPreparo(): Promise<Pedido[]> {
+    async getPedidosEmPreparo(): Promise<PedidoResponseDTO[]> {
         return this.getPedidosByStatus('EM PREPARO');
     }
 
-    async getPedidosProntos(): Promise<Pedido[]> {
+    async getPedidosProntos(): Promise<PedidoResponseDTO[]> {
         return this.getPedidosByStatus('PRONTO');
     }
 
 
-    async iniciarPreparo(pedidoId: number, barmanId: number): Promise<Pedido> {
+    async iniciarPreparo(pedidoId: number, barmanId: number): Promise<PedidoResponseDTO> {
         const response = await api.put(
             `/api/pedidos/${pedidoId}/atribuir-barman`,
             { barmanId }
@@ -86,32 +51,33 @@ class BarService {
         return response.data;
     }
 
-    async concluirPreparo(pedidoId: number, barmanId: number): Promise<Pedido> {
+    async concluirPreparo(pedidoId: number, barmanId: number): Promise<PedidoResponseDTO> {
         const response = await api.put(`/api/pedidos/${pedidoId}/concluir-barman`, {
             barmanId
         });
         return response.data;
     }
 
-    async atualizarStatusPedido(pedidoId: number, status: string): Promise<Pedido> {
-        const response = await api.put(`/api/pedidos/${pedidoId}/status`, {
-            statusPedido: status
+    async atualizarStatusPedido(pedidoId: number, status: string): Promise<PedidoResponseDTO> {
+        const dto: PedidoUpdateStatusDTO = { statusPedido: status };
+        const response = await api.put(`/api/pedidos/${pedidoId}/status`, null, {
+            params: dto
         });
         return response.data;
     }
 
-    async getPedidoById(id: number): Promise<Pedido> {
+    async getPedidoById(id: number): Promise<PedidoResponseDTO> {
         const response = await api.get(`/api/pedidos/${id}`);
         return response.data;
     }
 
-    async getBarmanMaisLivre(): Promise<Barman | null> {
+    async getBarmanMaisLivre(): Promise<BarmanResponseDTO | null> {
         const barmen = await this.getBarmen();
         const livres = barmen.filter(c => c.status === 'LIVRE');
         return livres.length > 0 ? livres[0] : null;
     }
 
-    filtrarPedidosBebidas(pedidos: Pedido[]): Pedido[] {
+    filtrarPedidosBebidas(pedidos: PedidoResponseDTO[]): PedidoResponseDTO[] {
         return pedidos.filter(
             p =>
                 p.item.categoria === 'BEBIDA' ||

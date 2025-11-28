@@ -42,9 +42,20 @@ import {
     AdminPanelSettings,
     Menu as MenuIcon,
 } from '@mui/icons-material';
+
+
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import adminService, { Mesa, Funcionario, Item } from '../../services/adminService';
+import adminService, { FuncionarioResponseDTO } from '../../services/adminService';
+import { MesaResponseDTO } from '../../dto/mesa/MesaResponseDTO';
+import { MesaCreateDTO } from '../../dto/mesa/MesaCreateDTO';
+import { MesaUpdateNumeroDTO } from '../../dto/mesa/MesaUpdateNumeroDTO';
+import { ItemResponseDTO } from '../../dto/item/ItemResponseDTO';
+import { ItemCreateDTO } from '../../dto/item/ItemCreateDTO';
+import { ItemUpdateDTO } from '../../dto/item/ItemUpdateDTO';
+import { GarcomCreateDTO } from '../../dto/garcom/GarcomCreateDTO';
+import { CozinheiroCreateDTO } from '../../dto/cozinheiro/CozinheiroCreateDTO';
+import { BarmanCreateDTO } from '../../dto/barman/BarmanCreateDTO';
 
 const drawerWidth = 240;
 
@@ -56,9 +67,9 @@ const DashboardAdmin: React.FC = () => {
     const [activeTab, setActiveTab] = useState(0);
     const [loading, setLoading] = useState(false);
 
-    const [mesas, setMesas] = useState<Mesa[]>([]);
-    const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
-    const [itens, setItens] = useState<Item[]>([]);
+    const [mesas, setMesas] = useState<MesaResponseDTO[]>([]);
+    const [funcionarios, setFuncionarios] = useState<any[]>([]);
+    const [itens, setItens] = useState<ItemResponseDTO[]>([]);
 
     const [openDialog, setOpenDialog] = useState(false);
     const [dialogType, setDialogType] = useState<'MESA' | 'FUNCIONARIO' | 'ITEM'>('MESA');
@@ -82,7 +93,13 @@ const DashboardAdmin: React.FC = () => {
                     adminService.getCozinheiros(),
                     adminService.getBarmen(),
                 ]);
-                setFuncionarios([...garcons, ...cozinheiros, ...barmen]);
+
+                const funcionariosMapped = [
+                    ...garcons.map(g => ({ ...g, tipo: 'GARCOM' })),
+                    ...cozinheiros.map(c => ({ ...c, tipo: 'COZINHEIRO' })),
+                    ...barmen.map(b => ({ ...b, tipo: 'BARMAN' }))
+                ];
+                setFuncionarios(funcionariosMapped);
             } else if (activeTab === 2) {
                 const data = await adminService.getItens();
                 setItens(data);
@@ -128,21 +145,23 @@ const DashboardAdmin: React.FC = () => {
         try {
             if (dialogType === 'MESA') {
                 if (editingItem) {
-                    await adminService.updateMesaNumero(editingItem.id, formData.numero);
+                    const updateMesaNumeroDTO: MesaUpdateNumeroDTO = { numero: formData.numero };
+                    await adminService.updateMesaNumero(editingItem.id, updateMesaNumeroDTO);
                 } else {
-                    await adminService.createMesa(formData.numero, formData.capacidade);
+                    const createMesaDTO: MesaCreateDTO = { numero: formData.numero, capacidade: formData.capacidade };
+                    await adminService.createMesa(createMesaDTO);
                 }
             } else if (dialogType === 'FUNCIONARIO') {
                 if (editingItem) {
-                    await adminService.updateFuncionario(editingItem.id, formData.tipo, formData);
+                    await adminService.updateFuncionario(formData.tipo, editingItem.id, formData);
                 } else {
                     await adminService.createFuncionario(formData.tipo, formData);
                 }
             } else if (dialogType === 'ITEM') {
                 if (editingItem) {
-                    await adminService.updateItem(editingItem.id, formData);
+                    await adminService.updateItem(editingItem.id, formData as ItemUpdateDTO);
                 } else {
-                    await adminService.createItem(formData);
+                    await adminService.createItem(formData as ItemCreateDTO);
                 }
             }
             handleCloseDialog();

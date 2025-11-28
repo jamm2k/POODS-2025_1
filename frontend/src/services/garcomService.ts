@@ -1,86 +1,24 @@
 import api from './api';
+import { MesaResponseDTO } from '../dto/mesa/MesaResponseDTO';
+import { MesaUpdateStatusDTO } from '../dto/mesa/MesaUpdateStatusDTO';
+import { ItemResponseDTO } from '../dto/item/ItemResponseDTO';
+import { PedidoResponseDTO } from '../dto/pedido/PedidoResponseDTO';
+import { PedidoCreateDTO } from '../dto/pedido/PedidoCreateDTO';
+import { PedidoUpdateDTO } from '../dto/pedido/PedidoUpdateDTO';
+import { ComandaResponseDTO } from '../dto/comanda/ComandaResponseDTO';
+import { ComandaCreateDTO } from '../dto/comanda/ComandaCreateDTO';
+import { ComandaUpdateStatusDTO } from '../dto/comanda/ComandaUpdateStatusDTO';
+import { RelatorioGarcomDTO } from '../dto/relatorio/RelatorioGarcomDTO';
 
-export interface Mesa {
-  id: number;
-  numero: number;
-  status: 'LIVRE' | 'OCUPADA' | 'RESERVADA';
-  capacidade: number;
-}
 
-export interface Item {
-  id: number;
-  nome: string;
-  preco: number;
-  categoria: string;
-  tempoPreparo: number;
-  premium: boolean;
-}
-
-export interface Pedido {
-  id: number;
-  item: Item;
-  quantidade: number;
-  status: string;
-  obs?: string;
-  comanda: {
-    id: number;
-    nome: string;
-    mesa: {
-      id: number;
-      numero: number;
-    };
-  };
-  garcom: {
-    id: number;
-    nome: string;
-  };
-}
-
-export interface Comanda {
-  id: number;
-  nome: string;
-  status: string;
-  valorTotal: number;
-  taxaServico: boolean;
-  dataAbertura: string;
-  mesa: Mesa;
-  garcom: {
-    id: number;
-    nome: string;
-  };
-}
-
-export interface ComandaCreateDTO {
-  nome: string;
-  mesaId: number;
-  garcomId: number;
-}
-
-export interface PedidoCreateDTO {
-  itemId: number;
-  quantidade: number;
-  obs?: string;
-  comandaId: number;
-  garcomId: number;
-}
-
-export interface RelatorioBonus {
-  idGarcom: number;
-  nomeGarcom: string;
-  matricula: string;
-  mes: number;
-  ano: number;
-  totalVendasPremium: number;
-  bonusCalculado: number;
-}
 
 class GarcomService {
-  async getMesas(): Promise<Mesa[]> {
+  async getMesas(): Promise<MesaResponseDTO[]> {
     const response = await api.get('/api/mesas');
     return response.data;
   }
 
-  async getMesaById(id: number): Promise<Mesa> {
+  async getMesaById(id: number): Promise<MesaResponseDTO> {
     const response = await api.get(`/api/mesas/${id}`);
     return response.data;
   }
@@ -90,71 +28,72 @@ class GarcomService {
     return response.data;
   }
 
-  async getMeusPedidos(): Promise<Pedido[]> {
+  async getMeusPedidos(): Promise<PedidoResponseDTO[]> {
     const response = await api.get('/api/garcons/me/pedidos');
     return response.data;
   }
 
-  async getPedidosProntos(): Promise<Pedido[]> {
+  async getPedidosProntos(): Promise<PedidoResponseDTO[]> {
     const pedidos = await this.getMeusPedidos();
     return pedidos.filter(p => p.status === 'PRONTO');
   }
 
-  async getMeuBonus(mes: number, ano: number): Promise<RelatorioBonus> {
+  async getMeuBonus(mes: number, ano: number): Promise<RelatorioGarcomDTO> {
     const response = await api.get('/api/garcons/me/bonus', {
       params: { mes, ano }
     });
     return response.data;
   }
 
-  async getComandasByMesa(mesaId: number): Promise<Comanda[]> {
+  async getComandasByMesa(mesaId: number): Promise<ComandaResponseDTO[]> {
     const response = await api.get('/api/comandas', {
       params: { mesaId }
     });
     return response.data;
   }
 
-  async getComandaById(id: number): Promise<Comanda> {
+  async getComandaById(id: number): Promise<ComandaResponseDTO> {
     const response = await api.get(`/api/comandas/${id}`);
     return response.data;
   }
 
-  async criarComanda(data: ComandaCreateDTO): Promise<Comanda> {
+  async criarComanda(data: ComandaCreateDTO): Promise<ComandaResponseDTO> {
     const response = await api.post('/api/comandas', data);
     return response.data;
   }
 
 
-  async atualizarStatusComanda(id: number, status: string): Promise<Comanda> {
-    const response = await api.put(`/api/comandas/${id}/status`, { status });
+  async atualizarStatusComanda(id: number, status: string): Promise<ComandaResponseDTO> {
+    const dto: ComandaUpdateStatusDTO = { status };
+    const response = await api.put(`/api/comandas/${id}/status`, dto);
     return response.data;
   }
 
-  async getPedidosByComanda(comandaId: number): Promise<Pedido[]> {
+  async getPedidosByComanda(comandaId: number): Promise<PedidoResponseDTO[]> {
     const response = await api.get(`/api/comandas/${comandaId}/pedidos`);
     return response.data;
   }
 
-  async getItensCardapio(): Promise<Item[]> {
+  async getItensCardapio(): Promise<ItemResponseDTO[]> {
     const response = await api.get('/api/itens');
     return response.data;
   }
 
 
-  async criarPedido(data: PedidoCreateDTO): Promise<Pedido> {
+  async criarPedido(data: PedidoCreateDTO): Promise<PedidoResponseDTO> {
     const response = await api.post('/api/pedidos', data);
     return response.data;
   }
 
   async atualizarPedido(
-    id: number, 
-    data: { quantidade?: number; obs?: string }
-  ): Promise<Pedido> {
+    id: number,
+    data: PedidoUpdateDTO
+  ): Promise<PedidoResponseDTO> {
     const response = await api.put(`/api/pedidos/${id}`, data);
     return response.data;
   }
 
-  async marcarPedidoEntregue(id: number): Promise<Pedido> {
+  async marcarPedidoEntregue(id: number): Promise<PedidoResponseDTO> {
     const response = await api.put(`/api/pedidos/api/${id}/entregar`);
     return response.data;
   }
@@ -163,8 +102,9 @@ class GarcomService {
     await api.delete(`/api/pedidos/${id}`);
   }
 
-  async atualizarStatusMesa(id: number, status: string): Promise<Mesa> {
-    const response = await api.put(`/api/mesas/${id}/status`, { status });
+  async atualizarStatusMesa(id: number, status: string): Promise<MesaResponseDTO> {
+    const dto: MesaUpdateStatusDTO = { status };
+    const response = await api.put(`/api/mesas/${id}/status`, dto);
     return response.data;
   }
 }

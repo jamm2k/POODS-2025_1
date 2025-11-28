@@ -1,48 +1,39 @@
 import api from './api';
+import { MesaResponseDTO } from '../dto/mesa/MesaResponseDTO';
+import { MesaCreateDTO } from '../dto/mesa/MesaCreateDTO';
+import { MesaUpdateNumeroDTO } from '../dto/mesa/MesaUpdateNumeroDTO';
+import { ItemResponseDTO } from '../dto/item/ItemResponseDTO';
+import { ItemCreateDTO } from '../dto/item/ItemCreateDTO';
+import { ItemUpdateDTO } from '../dto/item/ItemUpdateDTO';
+import { GarcomResponseDTO } from '../dto/garcom/GarcomResponseDTO';
+import { CozinheiroResponseDTO } from '../dto/cozinheiro/CozinheiroResponseDTO';
+import { BarmanResponseDTO } from '../dto/barman/BarmanResponseDTO';
+import { GarcomCreateDTO } from '../dto/garcom/GarcomCreateDTO';
+import { CozinheiroCreateDTO } from '../dto/cozinheiro/CozinheiroCreateDTO';
+import { BarmanCreateDTO } from '../dto/barman/BarmanCreateDTO';
+import { GarcomUpdateDTO } from '../dto/garcom/GarcomUpdateDTO';
+import { CozinheiroUpdateDTO } from '../dto/cozinheiro/CozinheiroUpdateDTO';
+import { BarmanUpdateDTO } from '../dto/barman/BarmanUpdateDTO';
 
-export interface Mesa {
-    id: number;
-    numero: number;
-    status: 'LIVRE' | 'OCUPADA';
-    capacidade: number;
-}
+export type FuncionarioResponseDTO = GarcomResponseDTO | CozinheiroResponseDTO | BarmanResponseDTO;
 
-export interface Funcionario {
-    id: number;
-    nome: string;
-    email: string;
-    cpf: string;
-    matricula: string;
-    dataAdmissao: string;
-    salario: number;
-    tipo: 'GARCOM' | 'COZINHEIRO' | 'BARMAN';
-    status?: string;
-}
 
-export interface Item {
-    id: number;
-    nome: string;
-    descricao: string;
-    preco: number;
-    categoria: string;
-    tipo: string;
-    disponivel: boolean;
-    tempoPreparo?: number;
-}
+
+
 
 class AdminService {
-    async getMesas(): Promise<Mesa[]> {
+    async getMesas(): Promise<MesaResponseDTO[]> {
         const response = await api.get('/api/mesas');
         return response.data;
     }
 
-    async createMesa(numero: number, capacidade: number): Promise<Mesa> {
-        const response = await api.post('/api/mesas', { numero, capacidade });
+    async createMesa(dados: MesaCreateDTO): Promise<MesaResponseDTO> {
+        const response = await api.post('/api/mesas', dados);
         return response.data;
     }
 
-    async updateMesaNumero(id: number, numero: number): Promise<Mesa> {
-        const response = await api.put(`/api/mesas/${id}/numero`, { numero });
+    async updateMesaNumero(id: number, dados: MesaUpdateNumeroDTO): Promise<MesaUpdateNumeroDTO> {
+        const response = await api.put(`/api/mesas/${id}/numero`, dados);
         return response.data;
     }
 
@@ -50,22 +41,22 @@ class AdminService {
         await api.delete(`/api/mesas/${id}`);
     }
 
-    async getGarcons(): Promise<Funcionario[]> {
+    async getGarcons(): Promise<GarcomResponseDTO[]> {
         const response = await api.get('/api/garcons');
-        return response.data.map((f: any) => ({ ...f, tipo: 'GARCOM' }));
+        return response.data;
     }
 
-    async getCozinheiros(): Promise<Funcionario[]> {
+    async getCozinheiros(): Promise<CozinheiroResponseDTO[]> {
         const response = await api.get('/api/cozinheiros');
-        return response.data.map((f: any) => ({ ...f, tipo: 'COZINHEIRO' }));
+        return response.data;
     }
 
-    async getBarmen(): Promise<Funcionario[]> {
+    async getBarmen(): Promise<BarmanResponseDTO[]> {
         const response = await api.get('/api/barmen');
-        return response.data.map((f: any) => ({ ...f, tipo: 'BARMAN' }));
+        return response.data;
     }
 
-    async createFuncionario(tipo: string, data: any): Promise<Funcionario> {
+    async createFuncionario(tipo: string, data: GarcomCreateDTO | CozinheiroCreateDTO | BarmanCreateDTO): Promise<FuncionarioResponseDTO> {
         let endpoint = '';
         switch (tipo) {
             case 'GARCOM': endpoint = '/api/garcons'; break;
@@ -74,10 +65,10 @@ class AdminService {
             default: throw new Error('Tipo de funcionário inválido');
         }
         const response = await api.post(endpoint, data);
-        return { ...response.data, tipo };
+        return response.data;
     }
 
-    async updateFuncionario(tipo: string, id: number, data: any): Promise<Funcionario> {
+    async updateFuncionario(tipo: string, id: number, data: GarcomUpdateDTO | CozinheiroUpdateDTO | BarmanUpdateDTO): Promise<FuncionarioResponseDTO> {
         let endpoint = '';
         switch (tipo) {
             case 'GARCOM': endpoint = `/api/garcons/${id}`; break;
@@ -86,7 +77,7 @@ class AdminService {
             default: throw new Error('Tipo de funcionário inválido');
         }
         const response = await api.put(endpoint, data);
-        return { ...response.data, tipo };
+        return response.data;
     }
 
     async deleteFuncionario(tipo: string, id: number): Promise<void> {
@@ -100,17 +91,17 @@ class AdminService {
         await api.delete(endpoint);
     }
 
-    async getItens(): Promise<Item[]> {
+    async getItens(): Promise<ItemResponseDTO[]> {
         const response = await api.get('/api/itens');
         return response.data;
     }
 
-    async createItem(data: any): Promise<Item> {
+    async createItem(data: ItemCreateDTO): Promise<ItemResponseDTO> {
         const response = await api.post('/api/itens', data);
         return response.data;
     }
 
-    async updateItem(id: number, data: any): Promise<Item> {
+    async updateItem(id: number, data: ItemUpdateDTO): Promise<ItemResponseDTO> {
         const response = await api.put(`/api/itens/${id}`, data);
         return response.data;
     }

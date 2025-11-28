@@ -39,42 +39,11 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import api from '../../services/api';
-
-interface Mesa {
-  id: number;
-  numero: number;
-  status: 'LIVRE' | 'OCUPADA' | 'RESERVADA';
-  capacidade: number;
-}
-
-interface Pedido {
-  id: number;
-  item: {
-    nome: string;
-    categoria: string;
-  };
-  quantidade: number;
-  status: string;
-  comanda: {
-    id: number;
-    mesa: {
-      numero: number;
-    };
-  };
-  garcom: {
-    id: number;
-    nome: string;
-  };
-}
-
-interface Item {
-  id: number;
-  nome: string;
-  preco: number;
-  categoria: string;
-  descricao?: string;
-}
+import garcomService from '../../services/garcomService';
+import { MesaResponseDTO } from '../../dto/mesa/MesaResponseDTO';
+import { PedidoResponseDTO } from '../../dto/pedido/PedidoResponseDTO';
+import { ItemResponseDTO } from '../../dto/item/ItemResponseDTO';
+import { PedidoCreateDTO } from '../../dto/pedido/PedidoCreateDTO';
 
 interface PedidoCreate {
   itemId: number;
@@ -86,14 +55,14 @@ const DashboardGarcom: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const [mesas, setMesas] = useState<Mesa[]>([]);
-  const [pedidosProntos, setPedidosProntos] = useState<Pedido[]>([]);
+  const [mesas, setMesas] = useState<MesaResponseDTO[]>([]);
+  const [pedidosProntos, setPedidosProntos] = useState<PedidoResponseDTO[]>([]);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const [dialogPedidosOpen, setDialogPedidosOpen] = useState(false);
   const [dialogAbrirComandaOpen, setDialogAbrirComandaOpen] = useState(false);
 
-  const [selectedMesa, setSelectedMesa] = useState<Mesa | null>(null);
+  const [selectedMesa, setSelectedMesa] = useState<MesaResponseDTO | null>(null);
   const [nomeCliente, setNomeCliente] = useState('');
 
   const [dialogOpcoesMesaOpen, setDialogOpcoesMesaOpen] = useState(false);
@@ -101,8 +70,8 @@ const DashboardGarcom: React.FC = () => {
   const [dialogVerComandaAberta, setDialogVerComandaAberta] = useState(false);
   const [dialogAdicionarPedidosAberta, setDialogAdicionarPedidosAberta] = useState(false);
   const [selectedComandaId, setSelectedComandaId] = useState<number | null>(null);
-  const [comandaPedidos, setComandaPedidos] = useState<Pedido[]>([]);
-  const [menuItems, setMenuItems] = useState<Item[]>([]);
+  const [comandaPedidos, setComandaPedidos] = useState<PedidoResponseDTO[]>([]);
+  const [menuItems, setMenuItems] = useState<ItemResponseDTO[]>([]);
   const [novosItensPedido, setNovosItensPedido] = useState<{ [key: number]: PedidoCreate }>({});
 
   const [loading, setLoading] = useState(true);
@@ -110,8 +79,8 @@ const DashboardGarcom: React.FC = () => {
 
   const buscarMesas = async () => {
     try {
-      const response = await api.get('/api/mesas');
-      const sortedMesas = response.data.sort((a: Mesa, b: Mesa) => a.numero - b.numero);
+      const data = await garcomService.getMesas();
+      const sortedMesas = data.sort((a, b) => a.numero - b.numero);
       setMesas(sortedMesas);
     } catch (error) {
       console.error('Erro ao buscar mesas:', error);
@@ -120,8 +89,7 @@ const DashboardGarcom: React.FC = () => {
 
   const buscarPedidosProntos = async () => {
     try {
-      const response = await api.get('/api/garcons/me/pedidos');
-      const prontos = response.data.filter((p: Pedido) => p.status === 'PRONTO');
+      const prontos = await garcomService.getPedidosProntos();
       setPedidosProntos(prontos);
     } catch (error) {
       console.error('Erro ao buscar pedidos:', error);
@@ -130,8 +98,8 @@ const DashboardGarcom: React.FC = () => {
 
   const buscarItens = async () => {
     try {
-      const response = await api.get('/api/itens');
-      setMenuItems(response.data);
+      const itens = await garcomService.getItensCardapio();
+      setMenuItems(itens);
     } catch (error) {
       console.error('Erro ao buscar itens:', error);
     }
@@ -139,8 +107,7 @@ const DashboardGarcom: React.FC = () => {
 
   const buscarComandaDaMesa = async (mesaId: number) => {
     try {
-      const response = await api.get(`/api/comandas?mesaId=${mesaId}`);
-      const comandas = response.data;
+      const comandas = await garcomService.getComandasByMesa(mesaId);
       const ativa = comandas.find((c: any) => c.status && c.status.toUpperCase() === 'ABERTA');
       if (ativa) {
         setSelectedComandaId(ativa.id);
@@ -154,8 +121,8 @@ const DashboardGarcom: React.FC = () => {
 
   const buscarPedidosDaComanda = async (comandaId: number) => {
     try {
-      const response = await api.get(`/api/comandas/${comandaId}/pedidos`);
-      setComandaPedidos(response.data);
+      const pedidos = await garcomService.getPedidosByComanda(comandaId);
+      setComandaPedidos(pedidos);
     } catch (error) {
       console.error('Erro ao buscar pedidos da comanda:', error);
     }
@@ -197,7 +164,7 @@ const DashboardGarcom: React.FC = () => {
     navigate('/login');
   };
 
-  const handleMesaClick = async (mesa: Mesa) => {
+  const handleMesaClick = async (mesa: MesaResponseDTO) => {
     setSelectedMesa(mesa);
 
     if (mesa.status === 'OCUPADA') {
@@ -211,7 +178,7 @@ const DashboardGarcom: React.FC = () => {
     if (!selectedMesa || !user) return;
 
     try {
-      await api.post('/api/comandas', {
+      await garcomService.criarComanda({
         nome: nomeCliente || `Mesa ${selectedMesa.numero}`,
         mesaId: selectedMesa.id,
         garcomId: user.id
@@ -228,7 +195,7 @@ const DashboardGarcom: React.FC = () => {
   const handleReservarMesa = async () => {
     if (!selectedMesa) return;
     try {
-      await api.put(`/api/mesas/${selectedMesa.id}/status`, { status: 'RESERVADA' });
+      await garcomService.atualizarStatusMesa(selectedMesa.id, 'RESERVADA');
       setDialogOpcoesMesaOpen(false);
       await buscarMesas();
     } catch (error) {
@@ -240,7 +207,7 @@ const DashboardGarcom: React.FC = () => {
   const handleLiberarMesa = async () => {
     if (!selectedMesa) return;
     try {
-      await api.put(`/api/mesas/${selectedMesa.id}/status`, { status: 'LIVRE' });
+      await garcomService.atualizarStatusMesa(selectedMesa.id, 'LIVRE');
       setDialogOpcoesMesaOpen(false);
       await buscarMesas();
     } catch (error) {
@@ -260,7 +227,7 @@ const DashboardGarcom: React.FC = () => {
 
     try {
 
-      await api.put(`/api/comandas/${selectedComandaId}/status`, { status: 'PAGA' });
+      await garcomService.atualizarStatusComanda(selectedComandaId, 'PAGA');
       setDialogOpcoesMesaOpen(false);
       await buscarMesas();
       alert('Comanda fechada com sucesso!');
@@ -272,7 +239,7 @@ const DashboardGarcom: React.FC = () => {
 
   const handleMarcarEntregue = async (pedidoId: number) => {
     try {
-      await api.put(`/api/pedidos/api/${pedidoId}/entregar`);
+      await garcomService.marcarPedidoEntregue(pedidoId);
       await buscarPedidosProntos();
     } catch (error) {
       console.error('Erro ao marcar pedido como entregue:', error);
@@ -325,7 +292,7 @@ const DashboardGarcom: React.FC = () => {
 
     try {
       await Promise.all(pedidosParaEnviar.map(p =>
-        api.post('/api/pedidos', {
+        garcomService.criarPedido({
           garcomId: user.id,
           comandaId: selectedComandaId,
           itemId: p.itemId,
@@ -736,7 +703,7 @@ const DashboardGarcom: React.FC = () => {
                 <React.Fragment key={pedido.id}>
                   <ListItem sx={{ flexDirection: 'column', alignItems: 'flex-start', py: 2 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', mb: 1 }}>
-                      <Typography fontWeight="bold">Mesa {pedido.comanda.mesa.numero}</Typography>
+                      <Typography fontWeight="bold">Comanda #{pedido.comandaId}</Typography>
                       <Chip label="PRONTO" color="success" size="small" />
                     </Box>
                     <Typography variant="body1">{pedido.item.nome}</Typography>
