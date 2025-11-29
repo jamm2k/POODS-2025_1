@@ -11,5 +11,6 @@ export interface PedidoResponseDTO {
     obs?: string;
     status: string;
     mesaNumero?: number;
+    dataHora: string;
     item: ItemResponseDTO;
 }

@@ -43,4 +43,6 @@ public class Pedido {
     @Column(nullable = false)
     private String status;
 
+    @Column(name = "data_hora")
+    private java.time.LocalDateTime dataHora = java.time.LocalDateTime.now();
 }

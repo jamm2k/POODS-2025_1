@@ -150,7 +150,7 @@ const DashboardGarcom: React.FC = () => {
     const interval = setInterval(() => {
       buscarPedidosProntos();
       buscarMesas();
-    }, 15000);
+    }, 1000);
 
     return () => clearInterval(interval);
   }, []);

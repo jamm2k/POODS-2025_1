@@ -27,6 +27,7 @@ public class PedidoMapper {
         dto.setQuantidade(pedido.getQuantidade());
         dto.setObs(pedido.getObs());
         dto.setStatus(pedido.getStatus());
+        dto.setDataHora(pedido.getDataHora());
 
         if (pedido.getItem() != null) {
             br.com.restaurante.gestao_restaurante.dto.item.ItemResponseDTO itemDto = new br.com.restaurante.gestao_restaurante.dto.item.ItemResponseDTO();

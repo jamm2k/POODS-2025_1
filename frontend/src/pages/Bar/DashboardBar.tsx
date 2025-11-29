@@ -16,7 +16,6 @@ import {
   Paper,
   CircularProgress,
   Avatar,
-  Badge,
 } from '@mui/material';
 import {
   AccountCircle,
@@ -34,21 +33,16 @@ import barService from '../../services/barService';
 import { BarmanResponseDTO } from '../../dto/barman/BarmanResponseDTO';
 import { PedidoResponseDTO } from '../../dto/pedido/PedidoResponseDTO';
 
-interface PedidoWithTimer extends PedidoResponseDTO {
-  tempoDecorrido?: number;
-  dataInicio?: Date;
-}
-
 const DashboardBar: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const [pedidosSolicitados, setPedidosSolicitados] = useState<PedidoWithTimer[]>([]);
-  const [pedidosEmPreparo, setPedidosEmPreparo] = useState<PedidoWithTimer[]>([]);
+  const [pedidosSolicitados, setPedidosSolicitados] = useState<PedidoResponseDTO[]>([]);
+  const [pedidosEmPreparo, setPedidosEmPreparo] = useState<PedidoResponseDTO[]>([]);
   const [barmen, setBarmen] = useState<BarmanResponseDTO[]>([]);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [loading, setLoading] = useState(true);
-  const [timers, setTimers] = useState<{ [key: number]: number }>({});
+  const [now, setNow] = useState(new Date());
 
   const buscarBarmen = async () => {
     try {
@@ -84,27 +78,19 @@ const DashboardBar: React.FC = () => {
     const interval = setInterval(() => {
       buscarPedidos();
       buscarBarmen();
-    }, 10000);
+    }, 1000);
 
     return () => clearInterval(interval);
   }, []);
 
+  // Timer update
   useEffect(() => {
-    const interval = setInterval(() => {
-      setTimers((prev) => {
-        const newTimers = { ...prev };
-        pedidosEmPreparo.forEach((pedido) => {
-          if (!newTimers[pedido.id]) {
-            newTimers[pedido.id] = 0;
-          }
-          newTimers[pedido.id] += 1;
-        });
-        return newTimers;
-      });
+    const timerInterval = setInterval(() => {
+      setNow(new Date());
     }, 1000);
 
-    return () => clearInterval(interval);
-  }, [pedidosEmPreparo]);
+    return () => clearInterval(timerInterval);
+  }, []);
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -140,9 +126,6 @@ const DashboardBar: React.FC = () => {
       }
 
       await barService.iniciarPreparo(pedidoId, barman.id);
-
-      setTimers((prev) => ({ ...prev, [pedidoId]: 0 }));
-
       await buscarPedidos();
       await buscarBarmen();
     } catch (error) {
@@ -154,13 +137,6 @@ const DashboardBar: React.FC = () => {
   const handleConcluirPreparo = async (pedidoId: number, barmanId: number) => {
     try {
       await barService.concluirPreparo(pedidoId, barmanId);
-
-      setTimers((prev) => {
-        const newTimers = { ...prev };
-        delete newTimers[pedidoId];
-        return newTimers;
-      });
-
       await buscarPedidos();
       await buscarBarmen();
     } catch (error) {
@@ -169,7 +145,19 @@ const DashboardBar: React.FC = () => {
     }
   };
 
+  const calcularTempoDecorrido = (dataHora: string) => {
+    if (!dataHora) return 0;
+    let inicio = new Date(dataHora).getTime();
+    const atual = now.getTime();
+    if (inicio > atual + 60000) {
+      inicio = new Date(dataHora + 'Z').getTime();
+    }
+
+    return Math.floor((atual - inicio) / 1000);
+  };
+
   const formatarTempo = (segundos: number) => {
+    if (segundos < 0) return "00:00";
     const mins = Math.floor(segundos / 60);
     const secs = segundos % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
@@ -348,6 +336,21 @@ const DashboardBar: React.FC = () => {
                       </Typography>
                     </Box>
 
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                      <Chip
+                        icon={<AccessTime />}
+                        label={formatarTempo(calcularTempoDecorrido(pedido.dataHora))}
+                        size="small"
+                        sx={{
+                          bgcolor: getCorTempo(calcularTempoDecorrido(pedido.dataHora)),
+                          color: 'white',
+                          fontWeight: 'bold',
+                          fontSize: '0.75rem',
+                          height: '24px'
+                        }}
+                      />
+                    </Box>
+
                     <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
                       <Chip
                         label={pedido.item.categoria}
@@ -460,22 +463,20 @@ const DashboardBar: React.FC = () => {
                       </Typography>
                     </Box>
 
-                    <Paper
-                      sx={{
-                        p: 2,
-                        mb: 2,
-                        bgcolor: getCorTempo(timers[pedido.id] || 0),
-                        color: 'white',
-                        textAlign: 'center',
-                        borderRadius: 2,
-                      }}
-                    >
-                      <Timer sx={{ fontSize: 40, mb: 1 }} />
-                      <Typography variant="h4" fontWeight="bold">
-                        {formatarTempo(timers[pedido.id] || 0)}
-                      </Typography>
-
-                    </Paper>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                      <Chip
+                        icon={<AccessTime />}
+                        label={formatarTempo(calcularTempoDecorrido(pedido.dataHora))}
+                        size="small"
+                        sx={{
+                          bgcolor: getCorTempo(calcularTempoDecorrido(pedido.dataHora)),
+                          color: 'white',
+                          fontWeight: 'bold',
+                          fontSize: '0.75rem',
+                          height: '24px'
+                        }}
+                      />
+                    </Box>
 
                     <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
                       <Chip

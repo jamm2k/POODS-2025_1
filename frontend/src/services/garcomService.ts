@@ -57,7 +57,7 @@ class GarcomService {
   }
 
   async marcarPedidoEntregue(id: number): Promise<PedidoResponseDTO> {
-    const response = await api.put(`/api/pedidos/api/${id}/entregar`);
+    const response = await api.put(`/api/pedidos/${id}/entregar`);
     return response.data;
   }
 
