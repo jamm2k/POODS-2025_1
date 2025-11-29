@@ -44,6 +44,7 @@ import { MesaResponseDTO } from '../../dto/mesa/MesaResponseDTO';
 import { PedidoResponseDTO } from '../../dto/pedido/PedidoResponseDTO';
 import { ItemResponseDTO } from '../../dto/item/ItemResponseDTO';
 import { PedidoCreateDTO } from '../../dto/pedido/PedidoCreateDTO';
+import { ComandaResponseDTO } from '../../dto/comanda/ComandaResponseDTO';
 
 interface PedidoCreate {
   itemId: number;
@@ -70,6 +71,7 @@ const DashboardGarcom: React.FC = () => {
   const [dialogVerComandaAberta, setDialogVerComandaAberta] = useState(false);
   const [dialogAdicionarPedidosAberta, setDialogAdicionarPedidosAberta] = useState(false);
   const [selectedComandaId, setSelectedComandaId] = useState<number | null>(null);
+  const [openComandas, setOpenComandas] = useState<ComandaResponseDTO[]>([]);
   const [comandaPedidos, setComandaPedidos] = useState<PedidoResponseDTO[]>([]);
   const [menuItems, setMenuItems] = useState<ItemResponseDTO[]>([]);
   const [novosItensPedido, setNovosItensPedido] = useState<{ [key: number]: PedidoCreate }>({});
@@ -105,18 +107,14 @@ const DashboardGarcom: React.FC = () => {
     }
   };
 
-  const buscarComandaDaMesa = async (mesaId: number) => {
+  const buscarComandasDaMesa = async (mesaId: number) => {
     try {
       const comandas = await garcomService.getComandasByMesa(mesaId);
-      const ativa = comandas.find((c: any) => c.status && c.status.toUpperCase() === 'ABERTA');
-      if (ativa) {
-        setSelectedComandaId(ativa.id);
-        return ativa.id;
-      }
+      const abertas = comandas.filter((c: any) => c.status && c.status.toUpperCase() === 'ABERTA');
+      setOpenComandas(abertas);
     } catch (error) {
-      console.error('Erro ao buscar comanda da mesa:', error);
+      console.error('Erro ao buscar comandas da mesa:', error);
     }
-    return null;
   };
 
   const buscarPedidosDaComanda = async (comandaId: number) => {
@@ -168,7 +166,7 @@ const DashboardGarcom: React.FC = () => {
     setSelectedMesa(mesa);
 
     if (mesa.status === 'OCUPADA') {
-      await buscarComandaDaMesa(mesa.id);
+      await buscarComandasDaMesa(mesa.id);
     }
 
     setDialogOpcoesMesaOpen(true);
@@ -217,17 +215,23 @@ const DashboardGarcom: React.FC = () => {
   };
 
   const handleFecharComanda = async () => {
-    if (!selectedComandaId) {
-      alert('Nenhuma comanda ativa encontrada para fechar.');
-      return;
-    }
-    if (!window.confirm('Tem certeza que deseja fechar esta comanda? A mesa será liberada.')) {
+    if (!selectedComandaId || !selectedMesa) return;
+
+    if (!window.confirm('Tem certeza que deseja fechar esta comanda?')) {
       return;
     }
 
     try {
-
       await garcomService.atualizarStatusComanda(selectedComandaId, 'PAGA');
+
+      const comandas = await garcomService.getComandasByMesa(selectedMesa.id);
+      const abertas = comandas.filter((c: any) => c.status && c.status.toUpperCase() === 'ABERTA');
+
+      if (abertas.length === 0) {
+        await garcomService.atualizarStatusMesa(selectedMesa.id, 'LIVRE');
+      }
+
+      setDialogVerComandaAberta(false);
       setDialogOpcoesMesaOpen(false);
       await buscarMesas();
       alert('Comanda fechada com sucesso!');
@@ -247,19 +251,16 @@ const DashboardGarcom: React.FC = () => {
     }
   };
 
-  const handleAbrirVerComanda = () => {
-    if (selectedComandaId) {
-      buscarPedidosDaComanda(selectedComandaId);
-      setDialogOpcoesMesaOpen(false);
-      setDialogVerComandaAberta(true);
-    } else {
-      alert('Erro: Comanda não encontrada.');
-    }
+  const handleAbrirVerComanda = (comandaId: number) => {
+    setSelectedComandaId(comandaId);
+    buscarPedidosDaComanda(comandaId);
+    setDialogVerComandaAberta(true);
   };
 
   const handleAbrirAdicionarPedidos = () => {
     setNovosItensPedido({});
     setDialogOpcoesMesaOpen(false);
+    setDialogVerComandaAberta(false);
     setDialogAdicionarPedidosAberta(true);
   };
 
@@ -488,7 +489,7 @@ const DashboardGarcom: React.FC = () => {
 
       <Dialog open={dialogOpcoesMesaOpen} onClose={() => setDialogOpcoesMesaOpen(false)} fullWidth maxWidth="xs">
         <DialogTitle sx={{ background: 'linear-gradient(135deg, #004D40 0%, #00695C 100%)', color: 'white' }}>
-          Mesa {selectedMesa?.numero} - {selectedMesa?.status}
+          Mesa {selectedMesa?.numero}
         </DialogTitle>
         <DialogContent sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2, py: 4 }}>
 
@@ -521,29 +522,50 @@ const DashboardGarcom: React.FC = () => {
           {/* CASO 2: MESA OCUPADA */}
           {selectedMesa?.status === 'OCUPADA' && (
             <>
-              <Button
-                variant="contained"
-                startIcon={<Visibility />}
-                onClick={handleAbrirVerComanda}
-                sx={{ bgcolor: '#1976D2', py: 1.5 }}
-              >
-                Ver Comanda
-              </Button>
+              <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'bold' }}>
+                Comandas Abertas:
+              </Typography>
+              <List sx={{ width: '100%', bgcolor: 'background.paper', mb: 2, maxHeight: 200, overflow: 'auto' }}>
+                {openComandas.map((comanda) => (
+                  <React.Fragment key={comanda.id}>
+                    <ListItem
+                      onClick={() => handleAbrirVerComanda(comanda.id)}
+                      sx={{
+                        border: '1px solid #e0e0e0',
+                        borderRadius: 1,
+                        mb: 1,
+                        cursor: 'pointer',
+                        '&:hover': { bgcolor: '#f5f5f5' }
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                        <Box>
+                          <Typography variant="body1" fontWeight="bold">{comanda.nome}</Typography>
+                          <Typography variant="caption" color="text.secondary">#{comanda.id}</Typography>
+                        </Box>
+                        <Visibility color="primary" />
+                      </Box>
+                    </ListItem>
+                  </React.Fragment>
+                ))}
+                {openComandas.length === 0 && (
+                  <Typography variant="body2" color="text.secondary" align="center">
+                    Nenhuma comanda aberta encontrada.
+                  </Typography>
+                )}
+              </List>
+
               <Button
                 variant="contained"
                 startIcon={<AddCircle />}
-                onClick={handleAbrirAdicionarPedidos}
+                onClick={() => {
+                  setDialogOpcoesMesaOpen(false);
+                  setNomeCliente('');
+                  setDialogAbrirComandaOpen(true);
+                }}
                 sx={{ bgcolor: '#4CAF50', py: 1.5 }}
               >
-                Adicionar Pedidos
-              </Button>
-              <Button
-                variant="contained"
-                startIcon={<Receipt />}
-                onClick={handleFecharComanda}
-                sx={{ bgcolor: '#D32F2F', py: 1.5 }}
-              >
-                Fechar Comanda
+                Abrir Nova Comanda
               </Button>
             </>
           )}
@@ -581,8 +603,8 @@ const DashboardGarcom: React.FC = () => {
       </Dialog>
 
       <Dialog open={dialogVerComandaAberta} onClose={() => setDialogVerComandaAberta(false)} fullWidth maxWidth="sm">
-        <DialogTitle sx={{ bgcolor: '#1976D2', color: 'white' }}>
-          Comanda - Mesa {selectedMesa?.numero}
+        <DialogTitle sx={{ background: 'linear-gradient(135deg, #004D40 0%, #00695C 100%)', color: 'white' }}>
+          Comanda - Mesa {selectedMesa?.numero} {selectedComandaId && openComandas.find(c => c.id === selectedComandaId)?.nome ? `- ${openComandas.find(c => c.id === selectedComandaId)?.nome}` : ''}
         </DialogTitle>
         <DialogContent sx={{ mt: 2, p: 0 }}>
           {!Array.isArray(comandaPedidos) || comandaPedidos.length === 0 ? (
@@ -618,8 +640,28 @@ const DashboardGarcom: React.FC = () => {
             </List>
           )}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDialogVerComandaAberta(false)}>Fechar</Button>
+        <DialogActions sx={{ justifyContent: 'space-between', p: 2 }}>
+          <Button onClick={() => setDialogVerComandaAberta(false)} color="inherit">
+            Voltar
+          </Button>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%', maxWidth: 220 }}>
+            <Button
+              variant="contained"
+              startIcon={<AddCircle />}
+              onClick={handleAbrirAdicionarPedidos}
+              sx={{ bgcolor: '#4CAF50', width: '100%' }}
+            >
+              Adicionar Itens
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<Receipt />}
+              onClick={handleFecharComanda}
+              sx={{ bgcolor: '#D32F2F', width: '100%' }}
+            >
+              Fechar Comanda
+            </Button>
+          </Box>
         </DialogActions>
       </Dialog>
 

@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 import jakarta.persistence.*;
 import lombok.*;
 
-
 @Data
 @Entity
 @Table(name = "comandas")
@@ -19,7 +18,7 @@ public class Comanda {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "mesa_id", nullable = false)
+    @JoinColumn(name = "mesa_id", nullable = true)
     private Mesa mesa;
 
     @ManyToOne
@@ -46,6 +45,5 @@ public class Comanda {
 
     @Column(nullable = true, name = "taxaservico")
     private boolean taxaServico;
-
 
 }

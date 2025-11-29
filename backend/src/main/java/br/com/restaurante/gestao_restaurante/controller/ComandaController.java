@@ -24,11 +24,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PutMapping;
 
-
-
-
-
-
 @RestController
 @RequestMapping("api/comandas")
 public class ComandaController {
@@ -40,16 +35,14 @@ public class ComandaController {
 
     @GetMapping
     public ResponseEntity<List<ComandaResponseDTO>> buscarTodasComandas(
-        @RequestParam(required = false) Long mesaId
-    ) {
+            @RequestParam(value = "mesaId", required = false) Long mesaId) {
 
-        if(mesaId != null){
+        if (mesaId != null) {
             return ResponseEntity.ok(comandaService.findComandasByMesa(mesaId));
         }
-        
         return ResponseEntity.ok(comandaService.findAllComandas());
     }
-    
+
     @GetMapping("/{id}")
     public ResponseEntity<ComandaResponseDTO> buscarComandaId(@PathVariable Long id) {
         return ResponseEntity.ok(comandaService.findByIdComanda(id));
@@ -60,7 +53,7 @@ public class ComandaController {
         List<PedidoResponseDTO> pedidos = pedidoService.findPedidosByComanda(id);
         return ResponseEntity.ok(pedidos);
     }
-    
+
     @PostMapping
     public ResponseEntity<ComandaResponseDTO> criarComanda(@RequestBody ComandaCreateDTO comandaDTO) {
         ComandaResponseDTO comandaCriada = comandaService.criarNovaComanda(comandaDTO);
@@ -68,23 +61,23 @@ public class ComandaController {
     }
 
     @PutMapping("/{id}/status")
-    public ResponseEntity<ComandaResponseDTO> atualizarStatusComanda(@PathVariable Long id, @RequestBody ComandaUpdateStatusDTO statusDTO) {
+    public ResponseEntity<ComandaResponseDTO> atualizarStatusComanda(@PathVariable Long id,
+            @RequestBody ComandaUpdateStatusDTO statusDTO) {
         ComandaResponseDTO comandaAtualizada = comandaService.atualizarStatusComanda(id, statusDTO);
         return ResponseEntity.ok(comandaAtualizada);
     }
 
     @PutMapping("/{id}/taxa-servico")
-    public ResponseEntity<ComandaResponseDTO> atualizarTaxa(@PathVariable Long id, @RequestBody ComandaUpdateTaxaDTO taxaDTO) {
-        ComandaResponseDTO comanda = comandaService.atualizarTaxaServico(id,taxaDTO);
+    public ResponseEntity<ComandaResponseDTO> atualizarTaxa(@PathVariable Long id,
+            @RequestBody ComandaUpdateTaxaDTO taxaDTO) {
+        ComandaResponseDTO comanda = comandaService.atualizarTaxaServico(id, taxaDTO);
 
         return ResponseEntity.ok(comanda);
     }
-    
+
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletarComanda(@PathVariable Long id){
+    public ResponseEntity<Void> deletarComanda(@PathVariable Long id) {
         comandaService.deletarComanda(id);
         return ResponseEntity.noContent().build();
     }
-
-
 }

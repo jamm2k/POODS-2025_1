@@ -8,6 +8,5 @@ import lombok.Setter;
 public class GarcomUpdateDTO {
     private String nome;
     private String email;
-    private String senha;
     private Double salario;
 }
