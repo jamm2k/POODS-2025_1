@@ -17,37 +17,36 @@ import br.com.restaurante.gestao_restaurante.models.Mesa;
 
 @Service
 public class MesaService {
-    
+
     @Autowired
     private MesaRepository mesaRepository;
-    
+
     @Autowired
     private MesaMapper mesaMapper;
 
-
-    protected Mesa findById(Long id){
+    protected Mesa findById(Long id) {
         return mesaRepository.findById(id)
-            .orElseThrow(() -> new EntityNotFoundException("Mesa não encontrada com o ID: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Mesa não encontrada com o ID: " + id));
     }
 
     public MesaResponseDTO findByIdMesa(Long id) {
         Mesa mesa = this.findById(id);
         return mesaMapper.toResponseDTO(mesa);
     }
-    
+
     public List<MesaResponseDTO> findAllMesas() {
         return mesaRepository.findAll()
-            .stream()
-            .map(mesaMapper::toResponseDTO)
-            .toList();    
+                .stream()
+                .map(mesaMapper::toResponseDTO)
+                .toList();
     }
-    
+
     public MesaResponseDTO criarNovaMesa(MesaCreateDTO mesaDTO) {
-        
+
         mesaRepository.findByNumero(mesaDTO.getNumero()).ifPresent(m -> {
             throw new RuntimeException("Erro: Número da mesa já cadastrado.");
         });
-        
+
         Mesa mesa = mesaMapper.toEntity(mesaDTO);
         mesa.setStatus("LIVRE");
 
@@ -61,7 +60,7 @@ public class MesaService {
         if (mesaAtualizada.getStatus() != null) {
             mesaExistente.setStatus(mesaAtualizada.getStatus());
         }
-        
+
         Mesa mesaSalva = mesaRepository.save(mesaExistente);
         return mesaMapper.toResponseDTO(mesaSalva);
     }
@@ -87,32 +86,41 @@ public class MesaService {
         if (mesaAtualizada.getCapacidade() != null) {
             mesaExistente.setCapacidade(mesaAtualizada.getCapacidade());
         }
-        
+
         Mesa mesaSalva = mesaRepository.save(mesaExistente);
         return mesaMapper.toResponseDTO(mesaSalva);
     }
 
-    public List<MesaResponseDTO> buscarMesaPorStatus(String status){
+    public List<MesaResponseDTO> buscarMesaPorStatus(String status) {
         return mesaRepository.findByStatus(status)
-            .stream()
-            .map(mesaMapper::toResponseDTO)
-            .toList();
+                .stream()
+                .map(mesaMapper::toResponseDTO)
+                .toList();
     }
-    
-    public MesaResponseDTO buscarMesaPorNumero(Integer numero){
+
+    public MesaResponseDTO buscarMesaPorNumero(Integer numero) {
         Mesa mesa = mesaRepository.findByNumero(numero)
-            .orElseThrow(() -> new EntityNotFoundException("Mesa não encontrada com o numero:" + numero));
+                .orElseThrow(() -> new EntityNotFoundException("Mesa não encontrada com o numero:" + numero));
         return mesaMapper.toResponseDTO(mesa);
 
     }
+
+    @Autowired
+    private br.com.restaurante.gestao_restaurante.repositories.ComandaRepository comandaRepository;
 
     public void deletarMesa(Long id) {
         Mesa mesaExistente = this.findById(id);
         if (!"LIVRE".equals(mesaExistente.getStatus())) {
             throw new RuntimeException("Erro: Apenas mesas com status 'LIVRE' podem ser deletadas.");
         }
+
+        List<br.com.restaurante.gestao_restaurante.models.Comanda> comandas = comandaRepository
+                .findByMesa(mesaExistente);
+        for (br.com.restaurante.gestao_restaurante.models.Comanda comanda : comandas) {
+            comanda.setMesa(null);
+            comandaRepository.save(comanda);
+        }
+
         mesaRepository.deleteById(id);
     }
-
-
 }

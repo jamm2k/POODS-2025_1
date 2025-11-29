@@ -74,8 +74,8 @@ const DashboardAdmin: React.FC = () => {
 
     const [openDialog, setOpenDialog] = useState(false);
     const [dialogType, setDialogType] = useState<'MESA' | 'FUNCIONARIO' | 'ITEM'>('MESA');
-    const [editingItem, setEditingItem] = useState<any>(null);
 
+    const [editingItem, setEditingItem] = useState<any>(null);
     const [formData, setFormData] = useState<any>({});
 
     useEffect(() => {
@@ -87,7 +87,7 @@ const DashboardAdmin: React.FC = () => {
         try {
             if (activeTab === 0) {
                 const data = await adminService.getMesas();
-                setMesas(data);
+                setMesas(data.sort((a, b) => a.numero - b.numero));
             } else if (activeTab === 1) {
                 const [garcons, cozinheiros, barmen] = await Promise.all([
                     adminService.getGarcons(),

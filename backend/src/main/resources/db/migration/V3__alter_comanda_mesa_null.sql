@@ -1,0 +1,1 @@
+ALTER TABLE comandas ALTER COLUMN mesa_id DROP NOT NULL;
