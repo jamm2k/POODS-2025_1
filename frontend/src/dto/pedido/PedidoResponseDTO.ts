@@ -10,5 +10,6 @@ export interface PedidoResponseDTO {
     quantidade: number;
     obs?: string;
     status: string;
+    mesaNumero?: number;
     item: ItemResponseDTO;
 }

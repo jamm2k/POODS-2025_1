@@ -16,5 +16,6 @@ public class PedidoResponseDTO {
     private Integer quantidade;
     private String obs;
     private String status;
+    private Integer mesaNumero;
     private ItemResponseDTO item;
 }

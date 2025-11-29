@@ -321,7 +321,7 @@ const DashboardCozinha: React.FC = () => {
         ) : (
           <Grid container spacing={3} sx={{ mb: 4 }}>
             {pedidosSolicitados.map((pedido) => (
-              <Grid item xs={12} sm={6} md={4} key={pedido.id}>
+              <Grid item xs={12} sm={6} md={3} key={pedido.id}>
                 <Card
                   sx={{
                     border: '3px solid #EF5350',
@@ -343,7 +343,7 @@ const DashboardCozinha: React.FC = () => {
                       }}
                     >
                       <Typography variant="h6" fontWeight="bold">
-                        Comanda #{pedido.comandaId}
+                        Mesa {pedido.mesaNumero}, Comanda #{pedido.comandaId}
                       </Typography>
                       <Chip label="PENDENTE" color="error" size="small" sx={{ fontWeight: 'bold' }} />
                     </Box>
@@ -373,10 +373,6 @@ const DashboardCozinha: React.FC = () => {
                         <Typography variant="body2">{pedido.obs}</Typography>
                       </Paper>
                     )}
-
-                    <Typography variant="caption" color="text.secondary" display="block" mb={2}>
-                      Garçom ID: {pedido.garcomId}
-                    </Typography>
 
                     <Button
                       variant="contained"
@@ -416,7 +412,7 @@ const DashboardCozinha: React.FC = () => {
         ) : (
           <Grid container spacing={3}>
             {pedidosEmPreparo.map((pedido) => (
-              <Grid item xs={12} sm={6} md={4} key={pedido.id}>
+              <Grid item xs={12} sm={6} md={3} key={pedido.id}>
                 <Card
                   sx={{
                     border: '3px solid #FFA726',
@@ -438,7 +434,7 @@ const DashboardCozinha: React.FC = () => {
                       }}
                     >
                       <Typography variant="h6" fontWeight="bold">
-                        Mesa {pedido.comandaId}
+                        Mesa {pedido.mesaNumero}, Comanda #{pedido.comandaId}
                       </Typography>
                       <Chip
                         label="EM PREPARO"
@@ -454,7 +450,7 @@ const DashboardCozinha: React.FC = () => {
 
                     <Paper
                       sx={{
-                        p: 2,
+                        p: 1,
                         mb: 2,
                         bgcolor: getCorTempo(timers[pedido.id] || 0),
                         color: 'white',
@@ -462,8 +458,8 @@ const DashboardCozinha: React.FC = () => {
                         borderRadius: 2,
                       }}
                     >
-                      <Timer sx={{ fontSize: 40, mb: 1 }} />
-                      <Typography variant="h4" fontWeight="bold">
+                      <Timer sx={{ fontSize: 24, mb: 0.5 }} />
+                      <Typography variant="h6" fontWeight="bold">
                         {formatarTempo(timers[pedido.id] || 0)}
                       </Typography>
 
@@ -490,11 +486,8 @@ const DashboardCozinha: React.FC = () => {
                       </Paper>
                     )}
 
-                    <Typography variant="caption" color="text.secondary" display="block" mb={1}>
-                      Cozinheiro: {cozinheiros.find(c => c.id === pedido.cozinheiroId)?.nome || pedido.cozinheiroId}
-                    </Typography>
                     <Typography variant="caption" color="text.secondary" display="block" mb={2}>
-                      Garçom ID: {pedido.garcomId}
+                      Cozinheiro: {cozinheiros.find(c => c.id === pedido.cozinheiroId)?.nome || pedido.cozinheiroId}
                     </Typography>
 
                     <Button

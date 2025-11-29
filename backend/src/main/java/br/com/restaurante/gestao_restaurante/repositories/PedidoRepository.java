@@ -24,17 +24,10 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
     List<Pedido> findByGarcom(Garcom garcom);
 
     @Query("SELECT SUM(p.item.preco * p.quantidade) " +
-<<<<<<< HEAD
             "FROM Pedido p " +
             "WHERE p.garcom = :garcom " +
-            "AND p.item.categoria = 'PREMIUM' " +
+            "AND UPPER(p.item.tipo) = 'PREMIUM' " +
             "AND p.comanda.dataAbertura BETWEEN :inicioMes AND :fimMes")
-=======
-           "FROM Pedido p " + 
-           "WHERE p.garcom = :garcom " +
-           "AND UPPER(p.item.tipo) = 'PREMIUM' " +
-           "AND p.comanda.dataAbertura BETWEEN :inicioMes AND :fimMes")
->>>>>>> 151a95477380c94795844b86d02609315eb8ac7c
     Double sumVendasPremiumByGarcomAndData(
             @Param("garcom") Garcom garcom,
             @Param("inicioMes") LocalDateTime inicioMes,
