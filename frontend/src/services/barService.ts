@@ -79,10 +79,7 @@ class BarService {
 
     filtrarPedidosBebidas(pedidos: PedidoResponseDTO[]): PedidoResponseDTO[] {
         return pedidos.filter(
-            p =>
-                p.item.categoria === 'BEBIDA' ||
-                p.item.categoria === 'DRINK' ||
-                p.item.categoria === 'DRINKS'
+            p => p.item && (p.item.categoria === 'DRINK')
         );
     }
 }

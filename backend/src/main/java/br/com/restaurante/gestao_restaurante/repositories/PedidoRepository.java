@@ -19,19 +19,17 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
 
     List<Pedido> findByComanda(Comanda comanda);
 
-    Optional<Pedido> findByStatus(String status);
+    List<Pedido> findByStatus(String status);
 
     List<Pedido> findByGarcom(Garcom garcom);
-        
+
     @Query("SELECT SUM(p.item.preco * p.quantidade) " +
-           "FROM Pedido p " + 
-           "WHERE p.garcom = :garcom " +
-           "AND p.item.categoria = 'PREMIUM' " +
-           "AND p.comanda.dataAbertura BETWEEN :inicioMes AND :fimMes")
+            "FROM Pedido p " +
+            "WHERE p.garcom = :garcom " +
+            "AND p.item.categoria = 'PREMIUM' " +
+            "AND p.comanda.dataAbertura BETWEEN :inicioMes AND :fimMes")
     Double sumVendasPremiumByGarcomAndData(
-        @Param("garcom") Garcom garcom,
-        @Param("inicioMes") LocalDateTime inicioMes,
-        @Param("fimMes") LocalDateTime fimMes
-    );
-    
+            @Param("garcom") Garcom garcom,
+            @Param("inicioMes") LocalDateTime inicioMes,
+            @Param("fimMes") LocalDateTime fimMes);
 }

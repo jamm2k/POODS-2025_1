@@ -45,14 +45,14 @@ class CozinhaService {
 
   async iniciarPreparo(pedidoId: number, cozinheiroId: number): Promise<PedidoResponseDTO> {
     const response = await api.put(
-      `/api/pedidos/api/${pedidoId}/atribuir-cozinheiro`,
-      cozinheiroId
+      `/api/pedidos/${pedidoId}/atribuir-cozinheiro`,
+      { cozinheiroId }
     );
     return response.data;
   }
 
   async concluirPreparo(pedidoId: number, cozinheiroId: number): Promise<PedidoResponseDTO> {
-    const response = await api.put(`/api/pedidos/api/${pedidoId}/concluir`, {
+    const response = await api.put(`/api/pedidos/${pedidoId}/concluir`, {
       cozinheiroId
     });
     return response.data;
@@ -80,18 +80,9 @@ class CozinhaService {
   filtrarPedidosComida(pedidos: PedidoResponseDTO[]): PedidoResponseDTO[] {
     return pedidos.filter(
       p =>
-        p.item.categoria !== 'BEBIDA' &&
-        p.item.categoria !== 'DRINK' &&
-        p.item.categoria !== 'DRINKS'
-    );
-  }
-
-  filtrarPedidosBebidas(pedidos: PedidoResponseDTO[]): PedidoResponseDTO[] {
-    return pedidos.filter(
-      p =>
-        p.item.categoria === 'BEBIDA' ||
-        p.item.categoria === 'DRINK' ||
-        p.item.categoria === 'DRINKS'
+        p.item &&
+        (p.item.categoria === 'COMIDA' ||
+          p.item.categoria === 'SOBREMESA')
     );
   }
 }

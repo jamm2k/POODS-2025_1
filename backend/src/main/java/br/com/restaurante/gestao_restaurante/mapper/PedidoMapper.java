@@ -20,7 +20,7 @@ public class PedidoMapper {
         dto.setId(pedido.getId());
         dto.setGarcomId(pedido.getGarcom() != null ? pedido.getGarcom().getId() : null);
         dto.setComandaId(pedido.getComanda().getId());
-        dto.setItemId(pedido.getItem().getId());
+        dto.setItemId(pedido.getItem() != null ? pedido.getItem().getId() : null);
         dto.setCozinheiroId(pedido.getCozinheiro() != null ? pedido.getCozinheiro().getId() : null);
         dto.setBarmanId(pedido.getBarman() != null ? pedido.getBarman().getId() : null);
         dto.setQuantidade(pedido.getQuantidade());

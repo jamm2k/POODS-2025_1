@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PutMapping;
 
-
 @RestController
 @RequestMapping("/api/cozinheiros")
 public class CozinheiroController {
@@ -31,7 +30,6 @@ public class CozinheiroController {
     CozinheiroService cozinheiroService;
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<CozinheiroResponseDTO>> buscarTodosCozinheiros() {
         return ResponseEntity.ok(cozinheiroService.findAllCozinheiros());
     }
@@ -48,24 +46,26 @@ public class CozinheiroController {
         CozinheiroResponseDTO cozinheiroSalvo = cozinheiroService.criarCozinheiro(cozinheiroDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(cozinheiroSalvo);
     }
-    
+
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<CozinheiroResponseDTO> atualizarCozinheiro(@PathVariable Long id, @RequestBody CozinheiroUpdateDTO cozinheiroDTO) {        
+    public ResponseEntity<CozinheiroResponseDTO> atualizarCozinheiro(@PathVariable Long id,
+            @RequestBody CozinheiroUpdateDTO cozinheiroDTO) {
         CozinheiroResponseDTO cozinheiroAtualizado = cozinheiroService.atualizarCozinheiro(id, cozinheiroDTO);
         return ResponseEntity.ok(cozinheiroAtualizado);
     }
 
     @PutMapping("/{id}/status")
-    public ResponseEntity<Void> atualizarStatusCozinheiro(@PathVariable Long id, @RequestBody CozinheiroUpdateStatusDTO statusDTO) {
+    public ResponseEntity<Void> atualizarStatusCozinheiro(@PathVariable Long id,
+            @RequestBody CozinheiroUpdateStatusDTO statusDTO) {
         cozinheiroService.alterarStatusCozinheiro(id, statusDTO);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deletarCozinheiro(@PathVariable Long id){
-       cozinheiroService.deletarCozinheiro(id);
-       return ResponseEntity.noContent().build();
+    public ResponseEntity<Void> deletarCozinheiro(@PathVariable Long id) {
+        cozinheiroService.deletarCozinheiro(id);
+        return ResponseEntity.noContent().build();
     }
 }

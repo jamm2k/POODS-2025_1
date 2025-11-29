@@ -75,7 +75,7 @@ O sistema é dividido em módulos baseados em perfis de usuário:
     *   Isso irá construir as imagens do backend e frontend, e iniciar o banco de dados PostgreSQL.
 
 3.  **Acesse a aplicação:**
-    *   **Frontend:** [http://localhost:5173](http://localhost:5173) (ou a porta configurada no docker-compose)
+    *   **Frontend:** [http://localhost:3000](http://localhost:3000) (ou a porta configurada no docker-compose)
     *   **Backend API:** [http://localhost:8080](http://localhost:8080)
 
 ## Estrutura do Projeto
