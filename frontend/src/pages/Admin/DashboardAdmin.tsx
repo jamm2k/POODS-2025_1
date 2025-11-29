@@ -484,14 +484,16 @@ const DashboardAdmin: React.FC = () => {
                                     value={formData.cpf || ''}
                                     onChange={(e) => setFormData({ ...formData, cpf: e.target.value })}
                                     fullWidth
+                                    disabled={!!editingItem}
                                 />
-                                {!editingItem && (
+                                {(!editingItem || formData.tipo === 'GARCOM') && (
                                     <TextField
                                         label="Senha"
                                         type="password"
                                         value={formData.senha || ''}
                                         onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
                                         fullWidth
+                                        helperText={editingItem ? "Deixe em branco para manter a atual" : ""}
                                     />
                                 )}
                                 <TextField
@@ -499,6 +501,7 @@ const DashboardAdmin: React.FC = () => {
                                     value={formData.matricula || ''}
                                     onChange={(e) => setFormData({ ...formData, matricula: e.target.value })}
                                     fullWidth
+                                    disabled={!!editingItem}
                                 />
                                 <TextField
                                     label="Salário"
@@ -514,6 +517,7 @@ const DashboardAdmin: React.FC = () => {
                                     onChange={(e) => setFormData({ ...formData, dataAdmissao: e.target.value })}
                                     fullWidth
                                     InputLabelProps={{ shrink: true }}
+                                    disabled={!!editingItem}
                                 />
                                 {formData.tipo === 'GARCOM' && (
                                     <TextField
@@ -522,6 +526,7 @@ const DashboardAdmin: React.FC = () => {
                                         value={formData.bonus || ''}
                                         onChange={(e) => setFormData({ ...formData, bonus: parseFloat(e.target.value) })}
                                         fullWidth
+                                        disabled={!!editingItem}
                                     />
                                 )}
                             </>
