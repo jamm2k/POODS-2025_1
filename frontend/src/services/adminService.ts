@@ -2,6 +2,7 @@ import api from './api';
 import { MesaResponseDTO } from '../dto/mesa/MesaResponseDTO';
 import { MesaCreateDTO } from '../dto/mesa/MesaCreateDTO';
 import { MesaUpdateNumeroDTO } from '../dto/mesa/MesaUpdateNumeroDTO';
+import { MesaUpdateCapacidadeDTO } from '../dto/mesa/MesaUpdateCapacidadeDTO';
 import { ItemResponseDTO } from '../dto/item/ItemResponseDTO';
 import { ItemCreateDTO } from '../dto/item/ItemCreateDTO';
 import { ItemUpdateDTO } from '../dto/item/ItemUpdateDTO';
@@ -22,6 +23,8 @@ export type FuncionarioResponseDTO = GarcomResponseDTO | CozinheiroResponseDTO |
 
 
 class AdminService {
+
+    //mesas
     async getMesas(): Promise<MesaResponseDTO[]> {
         const response = await api.get('/api/mesas');
         return response.data;
@@ -37,10 +40,17 @@ class AdminService {
         return response.data;
     }
 
+    async updateMesaCapacidade(id: number, dados: MesaUpdateCapacidadeDTO): Promise<MesaResponseDTO> {
+        const response = await api.put(`/api/mesas/${id}/capacidade`, dados);
+        return response.data;
+    }
+
     async deleteMesa(id: number): Promise<void> {
         await api.delete(`/api/mesas/${id}`);
     }
 
+
+    //funcionarios
     async getGarcons(): Promise<GarcomResponseDTO[]> {
         const response = await api.get('/api/garcons');
         return response.data;
@@ -91,6 +101,8 @@ class AdminService {
         await api.delete(endpoint);
     }
 
+
+    //itens
     async getItens(): Promise<ItemResponseDTO[]> {
         const response = await api.get('/api/itens');
         return response.data;

@@ -9,6 +9,6 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class MesaUpdateNumeroDTO {
-    private Integer numero;
+public class MesaUpdateCapacidadeDTO {
+    private Integer capacidade;
 }

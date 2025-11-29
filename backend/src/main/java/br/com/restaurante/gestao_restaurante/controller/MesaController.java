@@ -12,6 +12,7 @@ import br.com.restaurante.gestao_restaurante.dto.mesa.MesaCreateDTO;
 import br.com.restaurante.gestao_restaurante.dto.mesa.MesaResponseDTO;
 import br.com.restaurante.gestao_restaurante.dto.mesa.MesaUpdateNumeroDTO;
 import br.com.restaurante.gestao_restaurante.dto.mesa.MesaUpdateStatusDTO;
+import br.com.restaurante.gestao_restaurante.dto.mesa.MesaUpdateCapacidadeDTO;
 import br.com.restaurante.gestao_restaurante.services.MesaService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -58,6 +59,13 @@ public class MesaController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<MesaResponseDTO> atualizarNumeroMesa(@PathVariable Long id, @RequestBody MesaUpdateNumeroDTO numeroDTO) {
         MesaResponseDTO mesaAtualizada = mesaService.atualizarNumeroMesa(id, numeroDTO);        
+        return ResponseEntity.ok(mesaAtualizada);
+    }
+
+    @PutMapping("/{id}/capacidade")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<MesaResponseDTO> atualizarCapacidadeMesa(@PathVariable Long id, @RequestBody MesaUpdateCapacidadeDTO capacidadeDTO) {
+        MesaResponseDTO mesaAtualizada = mesaService.atualizarCapacidadeMesa(id, capacidadeDTO);        
         return ResponseEntity.ok(mesaAtualizada);
     }
     

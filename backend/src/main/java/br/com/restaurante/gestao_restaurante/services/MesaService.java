@@ -11,6 +11,7 @@ import br.com.restaurante.gestao_restaurante.dto.mesa.MesaCreateDTO;
 import br.com.restaurante.gestao_restaurante.dto.mesa.MesaResponseDTO;
 import br.com.restaurante.gestao_restaurante.dto.mesa.MesaUpdateNumeroDTO;
 import br.com.restaurante.gestao_restaurante.dto.mesa.MesaUpdateStatusDTO;
+import br.com.restaurante.gestao_restaurante.dto.mesa.MesaUpdateCapacidadeDTO;
 import br.com.restaurante.gestao_restaurante.mapper.MesaMapper;
 import br.com.restaurante.gestao_restaurante.models.Mesa;
 
@@ -72,9 +73,21 @@ public class MesaService {
             if (!m.getId().equals(id)) {
                 throw new RuntimeException("Erro: Número da mesa já cadastrado.");
             }
-            mesaExistente.setNumero(mesaAtualizada.getNumero());
         });
 
+        mesaExistente.setNumero(mesaAtualizada.getNumero());
+
+        Mesa mesaSalva = mesaRepository.save(mesaExistente);
+        return mesaMapper.toResponseDTO(mesaSalva);
+    }
+
+    public MesaResponseDTO atualizarCapacidadeMesa(Long id, MesaUpdateCapacidadeDTO mesaAtualizada) {
+        Mesa mesaExistente = this.findById(id);
+
+        if (mesaAtualizada.getCapacidade() != null) {
+            mesaExistente.setCapacidade(mesaAtualizada.getCapacidade());
+        }
+        
         Mesa mesaSalva = mesaRepository.save(mesaExistente);
         return mesaMapper.toResponseDTO(mesaSalva);
     }

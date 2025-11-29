@@ -50,6 +50,7 @@ import adminService, { FuncionarioResponseDTO } from '../../services/adminServic
 import { MesaResponseDTO } from '../../dto/mesa/MesaResponseDTO';
 import { MesaCreateDTO } from '../../dto/mesa/MesaCreateDTO';
 import { MesaUpdateNumeroDTO } from '../../dto/mesa/MesaUpdateNumeroDTO';
+import { MesaUpdateCapacidadeDTO } from '../../dto/mesa/MesaUpdateCapacidadeDTO';
 import { ItemResponseDTO } from '../../dto/item/ItemResponseDTO';
 import { ItemCreateDTO } from '../../dto/item/ItemCreateDTO';
 import { ItemUpdateDTO } from '../../dto/item/ItemUpdateDTO';
@@ -145,8 +146,17 @@ const DashboardAdmin: React.FC = () => {
         try {
             if (dialogType === 'MESA') {
                 if (editingItem) {
-                    const updateMesaNumeroDTO: MesaUpdateNumeroDTO = { numero: formData.numero };
-                    await adminService.updateMesaNumero(editingItem.id, updateMesaNumeroDTO);
+
+                    if (formData.numero !== editingItem.numero) {
+                        const updateMesaNumeroDTO: MesaUpdateNumeroDTO = { numero: formData.numero };
+                        await adminService.updateMesaNumero(editingItem.id, updateMesaNumeroDTO);
+                    }
+
+                    if (formData.capacidade !== editingItem.capacidade) {
+                        const updateMesaCapacidadeDTO: MesaUpdateCapacidadeDTO = { capacidade: formData.capacidade };
+                        await adminService.updateMesaCapacidade(editingItem.id, updateMesaCapacidadeDTO);
+                    }
+
                 } else {
                     const createMesaDTO: MesaCreateDTO = { numero: formData.numero, capacidade: formData.capacidade };
                     await adminService.createMesa(createMesaDTO);
