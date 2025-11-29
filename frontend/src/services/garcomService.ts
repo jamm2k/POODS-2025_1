@@ -13,6 +13,8 @@ import { RelatorioGarcomDTO } from '../dto/relatorio/RelatorioGarcomDTO';
 
 
 class GarcomService {
+
+  //mesas
   async getMesas(): Promise<MesaResponseDTO[]> {
     const response = await api.get('/api/mesas');
     return response.data;
@@ -23,11 +25,13 @@ class GarcomService {
     return response.data;
   }
 
+  //perfil
   async getMeuPerfil() {
     const response = await api.get('/api/garcons/me');
     return response.data;
   }
 
+  //pedidos
   async getMeusPedidos(): Promise<PedidoResponseDTO[]> {
     const response = await api.get('/api/garcons/me/pedidos');
     return response.data;
@@ -38,6 +42,30 @@ class GarcomService {
     return pedidos.filter(p => p.status === 'PRONTO');
   }
 
+
+  async criarPedido(data: PedidoCreateDTO): Promise<PedidoResponseDTO> {
+    const response = await api.post('/api/pedidos', data);
+    return response.data;
+  }
+
+  async atualizarPedido(
+    id: number,
+    data: PedidoUpdateDTO
+  ): Promise<PedidoResponseDTO> {
+    const response = await api.put(`/api/pedidos/${id}`, data);
+    return response.data;
+  }
+
+  async marcarPedidoEntregue(id: number): Promise<PedidoResponseDTO> {
+    const response = await api.put(`/api/pedidos/api/${id}/entregar`);
+    return response.data;
+  }
+
+  async cancelarPedido(id: number): Promise<void> {
+    await api.delete(`/api/pedidos/${id}`);
+  }
+
+  //bonus
   async getMeuBonus(mes: number, ano: number): Promise<RelatorioGarcomDTO> {
     const response = await api.get('/api/garcons/me/bonus', {
       params: { mes, ano }
@@ -45,6 +73,7 @@ class GarcomService {
     return response.data;
   }
 
+  //comandas
   async getComandasByMesa(mesaId: number): Promise<ComandaResponseDTO[]> {
     const response = await api.get('/api/comandas', {
       params: { mesaId }
@@ -74,32 +103,10 @@ class GarcomService {
     return response.data;
   }
 
+  //itens
   async getItensCardapio(): Promise<ItemResponseDTO[]> {
     const response = await api.get('/api/itens');
     return response.data;
-  }
-
-
-  async criarPedido(data: PedidoCreateDTO): Promise<PedidoResponseDTO> {
-    const response = await api.post('/api/pedidos', data);
-    return response.data;
-  }
-
-  async atualizarPedido(
-    id: number,
-    data: PedidoUpdateDTO
-  ): Promise<PedidoResponseDTO> {
-    const response = await api.put(`/api/pedidos/${id}`, data);
-    return response.data;
-  }
-
-  async marcarPedidoEntregue(id: number): Promise<PedidoResponseDTO> {
-    const response = await api.put(`/api/pedidos/api/${id}/entregar`);
-    return response.data;
-  }
-
-  async cancelarPedido(id: number): Promise<void> {
-    await api.delete(`/api/pedidos/${id}`);
   }
 
   async atualizarStatusMesa(id: number, status: string): Promise<MesaResponseDTO> {

@@ -26,7 +26,7 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
     @Query("SELECT SUM(p.item.preco * p.quantidade) " +
            "FROM Pedido p " + 
            "WHERE p.garcom = :garcom " +
-           "AND p.item.categoria = 'PREMIUM' " +
+           "AND UPPER(p.item.tipo) = 'PREMIUM' " +
            "AND p.comanda.dataAbertura BETWEEN :inicioMes AND :fimMes")
     Double sumVendasPremiumByGarcomAndData(
         @Param("garcom") Garcom garcom,
