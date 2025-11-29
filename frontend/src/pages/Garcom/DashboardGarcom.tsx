@@ -45,6 +45,9 @@ import { PedidoResponseDTO } from '../../dto/pedido/PedidoResponseDTO';
 import { ItemResponseDTO } from '../../dto/item/ItemResponseDTO';
 import { PedidoCreateDTO } from '../../dto/pedido/PedidoCreateDTO';
 import { ComandaResponseDTO } from '../../dto/comanda/ComandaResponseDTO';
+import { GarcomResponseDTO } from '../../dto/garcom/GarcomResponseDTO';
+import { RelatorioGarcomDTO } from '../../dto/relatorio/RelatorioGarcomDTO';
+import { Select, FormControl, InputLabel } from '@mui/material';
 
 interface PedidoCreate {
   itemId: number;
@@ -75,6 +78,16 @@ const DashboardGarcom: React.FC = () => {
   const [comandaPedidos, setComandaPedidos] = useState<PedidoResponseDTO[]>([]);
   const [menuItems, setMenuItems] = useState<ItemResponseDTO[]>([]);
   const [novosItensPedido, setNovosItensPedido] = useState<{ [key: number]: PedidoCreate }>({});
+  const [dialogPerfilOpen, setDialogPerfilOpen] = useState(false);
+  const [dadosPerfil, setDadosPerfil] = useState<GarcomResponseDTO | null>(null);
+
+  const [dialogMeusPedidosOpen, setDialogMeusPedidosOpen] = useState(false);
+  const [meusPedidos, setMeusPedidos] = useState<PedidoResponseDTO[]>([]);
+
+  const [dialogBonusOpen, setDialogBonusOpen] = useState(false);
+  const [meuBonus, setMeuBonus] = useState<RelatorioGarcomDTO | null>(null);
+  const [bonusMes, setBonusMes] = useState(new Date().getMonth() + 1);
+  const [bonusAno, setBonusAno] = useState(new Date().getFullYear());
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -160,6 +173,65 @@ const DashboardGarcom: React.FC = () => {
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  const handleAbrirPerfil = async () => {
+    try {
+      const dados = await garcomService.getMeuPerfil();
+      setDadosPerfil(dados);
+
+      const hoje = new Date();
+      try {
+        const bonus = await garcomService.getMeuBonus(hoje.getMonth() + 1, hoje.getFullYear());
+        setMeuBonus(bonus);
+      } catch (e) {
+        console.error("Erro ao buscar bonus para perfil", e);
+        setMeuBonus(null);
+      }
+
+      setDialogPerfilOpen(true);
+      handleMenuClose();
+    } catch (error) {
+      console.error('Erro ao buscar perfil:', error);
+      alert('Erro ao buscar perfil. Tente novamente.');
+    };
+  };
+
+  const handleAbrirMeusPedidos = async () => {
+    try {
+      const pedidos = await garcomService.getMeusPedidos();
+      setMeusPedidos(pedidos);
+      setDialogMeusPedidosOpen(true);
+      handleMenuClose();
+    } catch (error) {
+      console.error('Erro ao buscar meus pedidos:', error);
+      alert('Erro ao buscar pedidos.');
+    }
+  };
+
+  const handleAbrirBonus = async () => {
+    try {
+      const bonus = await garcomService.getMeuBonus(bonusMes, bonusAno);
+      setMeuBonus(bonus);
+      setDialogBonusOpen(true);
+      handleMenuClose();
+    } catch (error) {
+      console.error('Erro ao buscar bônus:', error);
+      // alert('Erro ao buscar bônus.'); // Pode não ter bônus ainda, não necessariamente erro crítico
+      setMeuBonus(null);
+      setDialogBonusOpen(true);
+      handleMenuClose();
+    }
+  };
+
+  const handleBuscarBonus = async () => {
+    try {
+      const bonus = await garcomService.getMeuBonus(bonusMes, bonusAno);
+      setMeuBonus(bonus);
+    } catch (error) {
+      console.error('Erro ao buscar bônus:', error);
+      setMeuBonus(null);
+    }
   };
 
   const handleMesaClick = async (mesa: MesaResponseDTO) => {
@@ -359,6 +431,15 @@ const DashboardGarcom: React.FC = () => {
             <Divider />
             <MenuItem onClick={handleRefresh}>
               <AccessTime sx={{ mr: 1 }} fontSize="small" /> Atualizar
+            </MenuItem>
+            <MenuItem onClick={handleAbrirPerfil}>
+              <AccountCircle sx={{ mr: 1 }} fontSize="small" /> Perfil
+            </MenuItem>
+            <MenuItem onClick={handleAbrirMeusPedidos}>
+              <Receipt sx={{ mr: 1 }} fontSize="small" /> Meus Pedidos
+            </MenuItem>
+            <MenuItem onClick={handleAbrirBonus}>
+              <CheckCircle sx={{ mr: 1 }} fontSize="small" /> Meu Bônus
             </MenuItem>
             <MenuItem onClick={handleLogout}>
               <Logout sx={{ mr: 1 }} fontSize="small" /> Sair
@@ -768,6 +849,146 @@ const DashboardGarcom: React.FC = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDialogPedidosOpen(false)}>Fechar</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={dialogPerfilOpen}
+        onClose={() => setDialogPerfilOpen(false)}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle sx={{ bgcolor: '#004D40', color: 'white' }}>
+          Perfil
+        </DialogTitle>
+        <DialogContent sx={{ mt: 2, p: 0 }}>
+          {dadosPerfil && (
+            <Box sx={{ p: 4, textAlign: 'center' }}>
+              <AccountCircle sx={{ fontSize: 60, color: '#4CAF50', mb: 2 }} />
+              <Typography><strong>Nome:</strong> {dadosPerfil.nome}</Typography>
+              <Typography><strong>Email:</strong> {dadosPerfil.email}</Typography>
+              <Typography><strong>CPF:</strong> {dadosPerfil.cpf}</Typography>
+              <Typography><strong>Matricula:</strong> {dadosPerfil.matricula}</Typography>
+              {meuBonus && (
+                <Box sx={{ p: 4, textAlign: 'center' }}>
+                  <Typography><strong>Bonus:</strong> {meuBonus?.bonusCalculado}</Typography>
+                </Box>
+              )}
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDialogPerfilOpen(false)}>Fechar</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={dialogMeusPedidosOpen}
+        onClose={() => setDialogMeusPedidosOpen(false)}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle sx={{ bgcolor: '#004D40', color: 'white' }}>
+          Meus Pedidos
+        </DialogTitle>
+        <DialogContent sx={{ mt: 2, p: 0 }}>
+          {meusPedidos.length === 0 ? (
+            <Box sx={{ p: 4, textAlign: 'center' }}>
+              <Typography color="text.secondary">Você ainda não fez pedidos.</Typography>
+            </Box>
+          ) : (
+            <List>
+              {meusPedidos.map((pedido) => (
+                <React.Fragment key={pedido.id}>
+                  <ListItem>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                      <Box>
+                        <Typography variant="body1">{pedido.item?.nome}</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Comanda #{pedido.comandaId}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ textAlign: 'right' }}>
+                        <Typography variant="body2">Qtd: {pedido.quantidade}</Typography>
+                        <Chip
+                          label={pedido.status}
+                          size="small"
+                          color={pedido.status === 'PRONTO' ? 'success' : 'default'}
+                          sx={{ mt: 0.5 }}
+                        />
+                      </Box>
+                    </Box>
+                  </ListItem>
+                  <Divider />
+                </React.Fragment>
+              ))}
+            </List>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDialogMeusPedidosOpen(false)}>Fechar</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={dialogBonusOpen}
+        onClose={() => setDialogBonusOpen(false)}
+        fullWidth
+        maxWidth="xs"
+      >
+        <DialogTitle sx={{ bgcolor: '#F57F17', color: 'white' }}>
+          Meu Bônus
+        </DialogTitle>
+        <DialogContent sx={{ mt: 2 }}>
+          <Box sx={{ display: 'flex', gap: 2, mb: 3, mt: 1 }}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Mês</InputLabel>
+              <Select
+                value={bonusMes}
+                label="Mês"
+                onChange={(e) => setBonusMes(Number(e.target.value))}
+              >
+                {[...Array(12)].map((_, i) => (
+                  <MenuItem key={i + 1} value={i + 1}>{i + 1}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth size="small">
+              <InputLabel>Ano</InputLabel>
+              <Select
+                value={bonusAno}
+                label="Ano"
+                onChange={(e) => setBonusAno(Number(e.target.value))}
+              >
+                <MenuItem value={2024}>2024</MenuItem>
+                <MenuItem value={2025}>2025</MenuItem>
+              </Select>
+            </FormControl>
+            <Button variant="contained" onClick={handleBuscarBonus}>
+              Buscar
+            </Button>
+          </Box>
+
+          {meuBonus ? (
+            <Box sx={{ textAlign: 'center', p: 2, bgcolor: '#FFF3E0', borderRadius: 2 }}>
+              <Typography variant="h6" color="text.secondary" gutterBottom>
+                Bônus Calculado
+              </Typography>
+              <Typography variant="h3" color="#E65100" fontWeight="bold">
+                R$ {meuBonus.bonusCalculado.toFixed(2)}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                Vendas Premium: R$ {meuBonus.totalVendasPremium.toFixed(2)}
+              </Typography>
+            </Box>
+          ) : (
+            <Box sx={{ textAlign: 'center', p: 2 }}>
+              <Typography color="text.secondary">Nenhum bônus encontrado para este período.</Typography>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDialogBonusOpen(false)}>Fechar</Button>
         </DialogActions>
       </Dialog>
     </Box>

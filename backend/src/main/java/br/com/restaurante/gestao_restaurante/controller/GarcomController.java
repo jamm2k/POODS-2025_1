@@ -75,7 +75,7 @@ public class GarcomController {
 
         Long garcomIdLogado = userDetails.getId(); 
 
-        RelatorioGarcomDTO relatorio = garcomService.gerarRelatorioBonusMensal(garcomIdLogado, mes, ano);
+        RelatorioGarcomDTO relatorio = garcomService.gerarRelatorioBonusMensal(garcomIdLogado, ano, mes);
         
         return ResponseEntity.ok(relatorio);
         

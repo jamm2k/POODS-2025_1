@@ -101,6 +101,16 @@ public class ComandaService {
             throw new IllegalArgumentException("Status inválido.");
         }
 
+        if ("FECHADA".equalsIgnoreCase(statusDTO.getStatus()) || "PAGA".equalsIgnoreCase(statusDTO.getStatus())) {
+            List<Pedido> pedidos = pedidoRepository.findByComanda(comandaExistente);
+            boolean temPedidosPendentes = pedidos.stream()
+                .anyMatch(p -> !p.getStatus().equals("ENTREGUE") && !p.getStatus().equals("CANCELADO"));
+            
+            if (temPedidosPendentes) {
+                throw new IllegalStateException("Não é possível fechar a comanda com pedidos pendentes. Todos os pedidos devem estar ENTREGUE ou CANCELADO.");
+            }
+        }
+
         comandaExistente.setStatus(statusDTO.getStatus());
 
         Comanda comandaAtualizada = comandaRepository.save(comandaExistente);
