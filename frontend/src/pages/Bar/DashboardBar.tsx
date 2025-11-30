@@ -83,7 +83,6 @@ const DashboardBar: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Timer update
   useEffect(() => {
     const timerInterval = setInterval(() => {
       setNow(new Date());

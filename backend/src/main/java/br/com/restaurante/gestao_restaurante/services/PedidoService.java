@@ -104,7 +104,11 @@ public class PedidoService {
         pedido.setItem(item);
         pedido.setCozinheiro(null);
         pedido.setBarman(null);
-        pedido.setStatus("SOLICITADO");
+        if (item.getCategoria().equals("BEBIDA")) {
+            pedido.setStatus("PRONTO");
+        } else {
+            pedido.setStatus("SOLICITADO");
+        }
 
         comandaService.atualizarValorTotalComanda(comanda);
 
