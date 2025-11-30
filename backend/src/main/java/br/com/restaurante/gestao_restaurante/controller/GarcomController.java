@@ -81,6 +81,17 @@ public class GarcomController {
         
     }
 
+    @GetMapping("/{id}/bonus")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<RelatorioGarcomDTO> buscarBonusGarcomPorId(
+            @PathVariable Long id,
+            @RequestParam int mes,
+            @RequestParam int ano
+    ) {
+        RelatorioGarcomDTO relatorio = garcomService.gerarRelatorioBonusMensal(id, ano, mes);
+        return ResponseEntity.ok(relatorio);
+    }
+
 
     @GetMapping("/me/pedidos")
     public ResponseEntity <List<PedidoResponseDTO>> buscarMeusPratos(

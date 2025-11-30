@@ -23,6 +23,9 @@ import {
     FormControl,
     InputLabel,
     Select,
+    Chip,
+    Avatar,
+    Grid,
 } from '@mui/material';
 import {
     AccountCircle,
@@ -32,6 +35,7 @@ import {
     RestaurantMenu,
     Menu as MenuIcon,
     AdminPanelSettings,
+    Person,
 } from '@mui/icons-material';
 
 import { useAuth } from '../../context/AuthContext';
@@ -44,12 +48,17 @@ import { MesaUpdateCapacidadeDTO } from '../../dto/mesa/MesaUpdateCapacidadeDTO'
 import { ItemResponseDTO } from '../../dto/item/ItemResponseDTO';
 import { ItemCreateDTO } from '../../dto/item/ItemCreateDTO';
 import { ItemUpdateDTO } from '../../dto/item/ItemUpdateDTO';
+import { GarcomResponseDTO } from '../../dto/garcom/GarcomResponseDTO';
+import { CozinheiroResponseDTO } from '../../dto/cozinheiro/CozinheiroResponseDTO';
+import { BarmanResponseDTO } from '../../dto/barman/BarmanResponseDTO';
 
 import AdminMesasTab from '../../components/admin/AdminMesasTab';
 import AdminFuncionariosTab from '../../components/admin/AdminFuncionariosTab';
 import AdminItensTab from '../../components/admin/AdminItensTab';
 
 const drawerWidth = 240;
+
+type FuncionarioWithTipo = (GarcomResponseDTO | CozinheiroResponseDTO | BarmanResponseDTO) & { tipo: string };
 
 const DashboardAdmin: React.FC = () => {
     const { user, logout } = useAuth();
@@ -68,6 +77,9 @@ const DashboardAdmin: React.FC = () => {
 
     const [editingItem, setEditingItem] = useState<any>(null);
     const [formData, setFormData] = useState<any>({});
+
+    const [viewingFuncionario, setViewingFuncionario] = useState<FuncionarioWithTipo | null>(null);
+    const [openViewDialog, setOpenViewDialog] = useState(false);
 
     useEffect(() => {
         loadData();
@@ -131,6 +143,27 @@ const DashboardAdmin: React.FC = () => {
         setOpenDialog(false);
         setEditingItem(null);
         setFormData({});
+    };
+
+    const handleOpenViewDialog = async (funcionario: any) => {
+        setViewingFuncionario(funcionario);
+
+        if (funcionario.tipo === 'GARCOM') {
+            try {
+                const hoje = new Date();
+                const bonusData = await adminService.getBonusGarcom(funcionario.id, hoje.getMonth() + 1, hoje.getFullYear());
+                setViewingFuncionario({ ...funcionario, bonus: bonusData.bonusCalculado });
+            } catch (error) {
+                console.error("Erro ao buscar bonus do garçom", error);
+            }
+        }
+
+        setOpenViewDialog(true);
+    };
+
+    const handleCloseViewDialog = () => {
+        setOpenViewDialog(false);
+        setViewingFuncionario(null);
     };
 
     const handleSave = async () => {
@@ -311,6 +344,7 @@ const DashboardAdmin: React.FC = () => {
                                 onOpenDialog={handleOpenDialog}
                                 onDelete={handleDelete}
                                 setFormData={setFormData}
+                                onViewProfile={handleOpenViewDialog}
                             />
                         )}
                         {activeTab === 2 && (
@@ -475,6 +509,59 @@ const DashboardAdmin: React.FC = () => {
                     <Button onClick={handleSave} variant="contained" sx={{ bgcolor: '#0B5D5E' }}>
                         Salvar
                     </Button>
+                </DialogActions>
+            </Dialog>
+
+            <Dialog open={openViewDialog} onClose={handleCloseViewDialog} maxWidth="sm" fullWidth>
+                <DialogTitle sx={{ bgcolor: '#0B5D5E', color: 'white' }}>
+                    Detalhes do Funcionário
+                </DialogTitle>
+                <DialogContent sx={{ mt: 2 }}>
+                    {viewingFuncionario && (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                                <Avatar sx={{ bgcolor: '#0B5D5E', width: 56, height: 56 }}><Person fontSize="large" /></Avatar>
+                                <Box>
+                                    <Typography variant="h6">{viewingFuncionario.nome}</Typography>
+                                    <Chip label={viewingFuncionario.tipo} color="primary" size="small" />
+                                </Box>
+                            </Box>
+
+                            <Divider />
+
+                            <Grid container spacing={2} sx={{ mt: 1 }}>
+                                <Grid item xs={12} sm={6}>
+                                    <Typography variant="subtitle2" color="text.secondary">Email</Typography>
+                                    <Typography variant="body1">{viewingFuncionario.email}</Typography>
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <Typography variant="subtitle2" color="text.secondary">CPF</Typography>
+                                    <Typography variant="body1">{viewingFuncionario.cpf}</Typography>
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <Typography variant="subtitle2" color="text.secondary">Matrícula</Typography>
+                                    <Typography variant="body1">{viewingFuncionario.matricula}</Typography>
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <Typography variant="subtitle2" color="text.secondary">Data de Admissão</Typography>
+                                    <Typography variant="body1">{viewingFuncionario.dataAdmissao}</Typography>
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <Typography variant="subtitle2" color="text.secondary">Salário</Typography>
+                                    <Typography variant="body1">R$ {viewingFuncionario.salario?.toFixed(2)}</Typography>
+                                </Grid>
+                                {viewingFuncionario.tipo === 'GARCOM' && (
+                                    <Grid item xs={12} sm={6}>
+                                        <Typography variant="subtitle2" color="text.secondary">Bônus Acumulado</Typography>
+                                        <Typography variant="body1">R$ {(viewingFuncionario as GarcomResponseDTO).bonus?.toFixed(2)}</Typography>
+                                    </Grid>
+                                )}
+                            </Grid>
+                        </Box>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseViewDialog}>Fechar</Button>
                 </DialogActions>
             </Dialog>
         </Box>

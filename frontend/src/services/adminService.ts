@@ -108,6 +108,13 @@ class AdminService {
         return response.data;
     }
 
+    async getBonusGarcom(id: number, mes: number, ano: number) {
+        const response = await api.get(`/api/garcons/${id}/bonus`, {
+            params: { mes, ano }
+        });
+        return response.data;
+    }
+
     async createItem(data: ItemCreateDTO): Promise<ItemResponseDTO> {
         const response = await api.post('/api/itens', data);
         return response.data;

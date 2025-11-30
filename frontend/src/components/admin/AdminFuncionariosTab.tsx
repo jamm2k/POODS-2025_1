@@ -8,16 +8,17 @@ import {
     Avatar,
     IconButton
 } from '@mui/material';
-import { Add, Person, Edit, Delete } from '@mui/icons-material';
+import { Add, Person, Edit, Delete, Visibility } from '@mui/icons-material';
 
 interface AdminFuncionariosTabProps {
     funcionarios: any[];
     onOpenDialog: (type: 'FUNCIONARIO', item?: any) => void;
     onDelete: (type: 'FUNCIONARIO', id: number, subType?: string) => void;
     setFormData: (data: any) => void;
+    onViewProfile: (funcionario: any) => void;
 }
 
-const AdminFuncionariosTab: React.FC<AdminFuncionariosTabProps> = ({ funcionarios, onOpenDialog, onDelete, setFormData }) => {
+const AdminFuncionariosTab: React.FC<AdminFuncionariosTabProps> = ({ funcionarios, onOpenDialog, onDelete, setFormData, onViewProfile }) => {
     return (
         <Box>
             <Button
@@ -45,6 +46,9 @@ const AdminFuncionariosTab: React.FC<AdminFuncionariosTabProps> = ({ funcionario
                             <Typography variant="body2">Email: {func.email}</Typography>
                             <Typography variant="body2">CPF: {func.cpf}</Typography>
                             <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                                <IconButton onClick={() => onViewProfile(func)} size="small" color="primary">
+                                    <Visibility />
+                                </IconButton>
                                 <IconButton onClick={() => onOpenDialog('FUNCIONARIO', func)} size="small">
                                     <Edit />
                                 </IconButton>
