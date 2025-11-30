@@ -10,24 +10,19 @@ import {
     Divider,
     Drawer,
     List,
-    ListItem,
+    ListItemButton,
     ListItemIcon,
     ListItemText,
-    Paper,
-    Grid,
-    Button,
-    TextField,
+    CircularProgress,
     Dialog,
     DialogTitle,
     DialogContent,
     DialogActions,
-    Select,
+    Button,
+    TextField,
     FormControl,
     InputLabel,
-    Chip,
-    CircularProgress,
-    Avatar,
-    ListItemButton,
+    Select,
 } from '@mui/material';
 import {
     AccountCircle,
@@ -35,18 +30,13 @@ import {
     TableRestaurant,
     People,
     RestaurantMenu,
-    Add,
-    Edit,
-    Delete,
-    Person,
-    AdminPanelSettings,
     Menu as MenuIcon,
+    AdminPanelSettings,
 } from '@mui/icons-material';
-
 
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import adminService, { FuncionarioResponseDTO } from '../../services/adminService';
+import adminService from '../../services/adminService';
 import { MesaResponseDTO } from '../../dto/mesa/MesaResponseDTO';
 import { MesaCreateDTO } from '../../dto/mesa/MesaCreateDTO';
 import { MesaUpdateNumeroDTO } from '../../dto/mesa/MesaUpdateNumeroDTO';
@@ -54,9 +44,10 @@ import { MesaUpdateCapacidadeDTO } from '../../dto/mesa/MesaUpdateCapacidadeDTO'
 import { ItemResponseDTO } from '../../dto/item/ItemResponseDTO';
 import { ItemCreateDTO } from '../../dto/item/ItemCreateDTO';
 import { ItemUpdateDTO } from '../../dto/item/ItemUpdateDTO';
-import { GarcomCreateDTO } from '../../dto/garcom/GarcomCreateDTO';
-import { CozinheiroCreateDTO } from '../../dto/cozinheiro/CozinheiroCreateDTO';
-import { BarmanCreateDTO } from '../../dto/barman/BarmanCreateDTO';
+
+import AdminMesasTab from '../../components/admin/AdminMesasTab';
+import AdminFuncionariosTab from '../../components/admin/AdminFuncionariosTab';
+import AdminItensTab from '../../components/admin/AdminItensTab';
 
 const drawerWidth = 240;
 
@@ -216,120 +207,6 @@ const DashboardAdmin: React.FC = () => {
         </Box>
     );
 
-    const renderMesas = () => (
-        <Box>
-            <Button
-                variant="contained"
-                startIcon={<Add />}
-                onClick={() => handleOpenDialog('MESA')}
-                sx={{ mb: 2, bgcolor: '#0B5D5E' }}
-            >
-                Nova Mesa
-            </Button>
-            <Grid container spacing={2}>
-                {mesas.map((mesa) => (
-                    <Grid item xs={12} sm={6} md={4} lg={3} key={mesa.id}>
-                        <Paper sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Box>
-                                <Typography variant="h6">Mesa {mesa.numero}</Typography>
-                                <Typography variant="body2" color="text.secondary">Capacidade: {mesa.capacidade || 4}</Typography>
-                                <Chip
-                                    label={mesa.status}
-                                    color={mesa.status === 'LIVRE' ? 'success' : 'error'}
-                                    size="small"
-                                />
-                            </Box>
-                            <Box>
-                                <IconButton onClick={() => handleOpenDialog('MESA', mesa)} size="small">
-                                    <Edit />
-                                </IconButton>
-                                <IconButton onClick={() => handleDelete('MESA', mesa.id)} size="small" color="error">
-                                    <Delete />
-                                </IconButton>
-                            </Box>
-                        </Paper>
-                    </Grid>
-                ))}
-            </Grid>
-        </Box>
-    );
-
-    const renderFuncionarios = () => (
-        <Box>
-            <Button
-                variant="contained"
-                startIcon={<Add />}
-                onClick={() => {
-                    handleOpenDialog('FUNCIONARIO');
-                    setFormData({ tipo: 'GARCOM' });
-                }}
-                sx={{ mb: 2, bgcolor: '#0B5D5E' }}
-            >
-                Novo Funcionário
-            </Button>
-            <Grid container spacing={2}>
-                {funcionarios.map((func) => (
-                    <Grid item xs={12} sm={6} md={4} key={func.id}>
-                        <Paper sx={{ p: 2 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                                <Avatar sx={{ bgcolor: '#0B5D5E' }}><Person /></Avatar>
-                                <Box>
-                                    <Typography variant="subtitle1" fontWeight="bold">{func.nome}</Typography>
-                                    <Typography variant="caption" color="text.secondary">{func.tipo}</Typography>
-                                </Box>
-                            </Box>
-                            <Typography variant="body2">Email: {func.email}</Typography>
-                            <Typography variant="body2">CPF: {func.cpf}</Typography>
-                            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
-                                <IconButton onClick={() => handleOpenDialog('FUNCIONARIO', func)} size="small">
-                                    <Edit />
-                                </IconButton>
-                                <IconButton onClick={() => handleDelete('FUNCIONARIO', func.id, func.tipo)} size="small" color="error">
-                                    <Delete />
-                                </IconButton>
-                            </Box>
-                        </Paper>
-                    </Grid>
-                ))}
-            </Grid>
-        </Box>
-    );
-
-    const renderItens = () => (
-        <Box>
-            <Button
-                variant="contained"
-                startIcon={<Add />}
-                onClick={() => handleOpenDialog('ITEM')}
-                sx={{ mb: 2, bgcolor: '#0B5D5E' }}
-            >
-                Novo Item
-            </Button>
-            <Grid container spacing={2}>
-                {itens.map((item) => (
-                    <Grid item xs={12} sm={6} md={4} key={item.id}>
-                        <Paper sx={{ p: 2 }}>
-                            <Typography variant="h6">{item.nome}</Typography>
-                            <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
-                                <Chip label={item.categoria} size="small" />
-                                <Chip label={item.tipo} size="small" color="primary" variant="outlined" />
-                                <Chip label={`R$ ${item.preco.toFixed(2)}`} size="small" variant="outlined" />
-                            </Box>
-                            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
-                                <IconButton onClick={() => handleOpenDialog('ITEM', item)} size="small">
-                                    <Edit />
-                                </IconButton>
-                                <IconButton onClick={() => handleDelete('ITEM', item.id)} size="small" color="error">
-                                    <Delete />
-                                </IconButton>
-                            </Box>
-                        </Paper>
-                    </Grid>
-                ))}
-            </Grid>
-        </Box>
-    );
-
     return (
         <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#f5f5f5' }}>
             <AppBar
@@ -421,9 +298,28 @@ const DashboardAdmin: React.FC = () => {
                     </Box>
                 ) : (
                     <>
-                        {activeTab === 0 && renderMesas()}
-                        {activeTab === 1 && renderFuncionarios()}
-                        {activeTab === 2 && renderItens()}
+                        {activeTab === 0 && (
+                            <AdminMesasTab
+                                mesas={mesas}
+                                onOpenDialog={handleOpenDialog}
+                                onDelete={handleDelete}
+                            />
+                        )}
+                        {activeTab === 1 && (
+                            <AdminFuncionariosTab
+                                funcionarios={funcionarios}
+                                onOpenDialog={handleOpenDialog}
+                                onDelete={handleDelete}
+                                setFormData={setFormData}
+                            />
+                        )}
+                        {activeTab === 2 && (
+                            <AdminItensTab
+                                itens={itens}
+                                onOpenDialog={handleOpenDialog}
+                                onDelete={handleDelete}
+                            />
+                        )}
                     </>
                 )}
             </Box>

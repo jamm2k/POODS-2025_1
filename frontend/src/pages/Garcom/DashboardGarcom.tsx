@@ -3,39 +3,17 @@ import {
   Box,
   Typography,
   IconButton,
-  AppBar,
-  Toolbar,
-  Menu,
   MenuItem,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  List,
-  ListItem,
-  Divider,
-  Paper,
   CircularProgress,
   Badge,
-  Button,
-  Chip,
   Grid,
-  TextField,
 } from '@mui/material';
 import {
   Notifications,
   AccountCircle,
-  Logout,
   Restaurant,
-  AccessTime,
-  CheckCircle,
-  People,
-  AddCircle,
   Receipt,
-  Add,
-  Remove,
-  Visibility,
-  Send,
+  CheckCircle,
 } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -43,11 +21,22 @@ import garcomService from '../../services/garcomService';
 import { MesaResponseDTO } from '../../dto/mesa/MesaResponseDTO';
 import { PedidoResponseDTO } from '../../dto/pedido/PedidoResponseDTO';
 import { ItemResponseDTO } from '../../dto/item/ItemResponseDTO';
-import { PedidoCreateDTO } from '../../dto/pedido/PedidoCreateDTO';
 import { ComandaResponseDTO } from '../../dto/comanda/ComandaResponseDTO';
 import { GarcomResponseDTO } from '../../dto/garcom/GarcomResponseDTO';
 import { RelatorioGarcomDTO } from '../../dto/relatorio/RelatorioGarcomDTO';
-import { Select, FormControl, InputLabel } from '@mui/material';
+
+import DashboardHeader from '../../components/DashboardHeader';
+import CardMesa from '../../components/CardMesa';
+import LegendaStatus from '../../components/LegendaStatus';
+
+import DialogAbrirComanda from '../../components/garcom/DialogAbrirComanda';
+import DialogOpcoesMesa from '../../components/garcom/DialogOpcoesMesa';
+import DialogVerComanda from '../../components/garcom/DialogVerComanda';
+import DialogAdicionarPedidos from '../../components/garcom/DialogAdicionarPedidos';
+import DialogPedidosProntos from '../../components/garcom/DialogPedidosProntos';
+import DialogPerfil from '../../components/garcom/DialogPerfil';
+import DialogMeusPedidos from '../../components/garcom/DialogMeusPedidos';
+import DialogBonus from '../../components/garcom/DialogBonus';
 
 interface PedidoCreate {
   itemId: number;
@@ -61,7 +50,6 @@ const DashboardGarcom: React.FC = () => {
 
   const [mesas, setMesas] = useState<MesaResponseDTO[]>([]);
   const [pedidosProntos, setPedidosProntos] = useState<PedidoResponseDTO[]>([]);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const [dialogPedidosOpen, setDialogPedidosOpen] = useState(false);
   const [dialogAbrirComandaOpen, setDialogAbrirComandaOpen] = useState(false);
@@ -159,15 +147,6 @@ const DashboardGarcom: React.FC = () => {
     setRefreshing(true);
     await Promise.all([buscarMesas(), buscarPedidosProntos(), buscarItens()]);
     setRefreshing(false);
-    handleMenuClose();
-  };
-
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
   };
 
   const handleLogout = () => {
@@ -190,7 +169,6 @@ const DashboardGarcom: React.FC = () => {
       }
 
       setDialogPerfilOpen(true);
-      handleMenuClose();
     } catch (error) {
       console.error('Erro ao buscar perfil:', error);
       alert('Erro ao buscar perfil. Tente novamente.');
@@ -202,7 +180,6 @@ const DashboardGarcom: React.FC = () => {
       const pedidos = await garcomService.getMeusPedidos();
       setMeusPedidos(pedidos);
       setDialogMeusPedidosOpen(true);
-      handleMenuClose();
     } catch (error) {
       console.error('Erro ao buscar meus pedidos:', error);
       alert('Erro ao buscar pedidos.');
@@ -214,13 +191,10 @@ const DashboardGarcom: React.FC = () => {
       const bonus = await garcomService.getMeuBonus(bonusMes, bonusAno);
       setMeuBonus(bonus);
       setDialogBonusOpen(true);
-      handleMenuClose();
     } catch (error) {
       console.error('Erro ao buscar bônus:', error);
-      // alert('Erro ao buscar bônus.'); // Pode não ter bônus ainda, não necessariamente erro crítico
       setMeuBonus(null);
       setDialogBonusOpen(true);
-      handleMenuClose();
     }
   };
 
@@ -382,16 +356,6 @@ const DashboardGarcom: React.FC = () => {
     }
   };
 
-  const getStatusStyles = (status: string) => {
-    const s = status ? status.toUpperCase() : '';
-    switch (s) {
-      case 'LIVRE': return { bgcolor: '#C8E6C9', color: '#1B5E20' };
-      case 'OCUPADA': return { bgcolor: '#FFCDD2', color: '#B71C1C' };
-      case 'RESERVADA': return { bgcolor: '#FFF9C4', color: '#F57F17' };
-      default: return { bgcolor: '#E0E0E0', color: '#616161' };
-    }
-  };
-
   if (loading) {
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'linear-gradient(135deg, #0d6869ff 0%, #0e4775ff 100%)' }}>
@@ -401,597 +365,133 @@ const DashboardGarcom: React.FC = () => {
     );
   }
 
+  const additionalMenuItems = (
+    <>
+      <MenuItem onClick={handleAbrirPerfil}>
+        <AccountCircle sx={{ mr: 1 }} fontSize="small" /> Perfil
+      </MenuItem>
+      <MenuItem onClick={handleAbrirMeusPedidos}>
+        <Receipt sx={{ mr: 1 }} fontSize="small" /> Meus Pedidos
+      </MenuItem>
+      <MenuItem onClick={handleAbrirBonus}>
+        <CheckCircle sx={{ mr: 1 }} fontSize="small" /> Meu Bônus
+      </MenuItem>
+    </>
+  );
+
+  const additionalToolbarItems = (
+    <IconButton color="inherit" onClick={() => setDialogPedidosOpen(true)}>
+      <Badge badgeContent={pedidosProntos.length} color="error">
+        <Notifications />
+      </Badge>
+    </IconButton>
+  );
+
   return (
     <Box sx={{ flexGrow: 1, minHeight: '100vh', bgcolor: '#f0f2f5' }}>
-      <AppBar position="sticky" sx={{ background: 'linear-gradient(135deg, #004D40 0%, #00695C 100%)', boxShadow: 3 }}>
-        <Toolbar>
-          <Restaurant sx={{ mr: 1 }} />
-          <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 'bold', fontSize: '1.1rem' }}>
-            Garçom
-          </Typography>
+      <DashboardHeader
+        title="Garçom"
+        icon={<Restaurant sx={{ mr: 1 }} />}
+        onRefresh={handleRefresh}
+        onLogout={handleLogout}
+        user={user}
+        additionalMenuItems={additionalMenuItems}
+        additionalToolbarItems={additionalToolbarItems}
+        gradient="linear-gradient(135deg, #004D40 0%, #00695C 100%)"
+      />
 
-          <IconButton color="inherit" onClick={() => setDialogPedidosOpen(true)}>
-            <Badge badgeContent={pedidosProntos.length} color="error">
-              <Notifications />
-            </Badge>
-          </IconButton>
-
-          <IconButton color="inherit" onClick={handleMenuOpen}>
-            <AccountCircle />
-          </IconButton>
-
-          <Menu
-            anchorEl={anchorEl}
-            open={Boolean(anchorEl)}
-            onClose={handleMenuClose}
-          >
-            <MenuItem disabled>
-              <Typography variant="body2">{user?.nome}</Typography>
-            </MenuItem>
-            <Divider />
-            <MenuItem onClick={handleRefresh}>
-              <AccessTime sx={{ mr: 1 }} fontSize="small" /> Atualizar
-            </MenuItem>
-            <MenuItem onClick={handleAbrirPerfil}>
-              <AccountCircle sx={{ mr: 1 }} fontSize="small" /> Perfil
-            </MenuItem>
-            <MenuItem onClick={handleAbrirMeusPedidos}>
-              <Receipt sx={{ mr: 1 }} fontSize="small" /> Meus Pedidos
-            </MenuItem>
-            <MenuItem onClick={handleAbrirBonus}>
-              <CheckCircle sx={{ mr: 1 }} fontSize="small" /> Meu Bônus
-            </MenuItem>
-            <MenuItem onClick={handleLogout}>
-              <Logout sx={{ mr: 1 }} fontSize="small" /> Sair
-            </MenuItem>
-          </Menu>
-        </Toolbar>
-      </AppBar>
-
-      <Box sx={{ p: 2 }}>
-        <Box sx={{ display: 'flex', gap: 2, mb: 2, justifyContent: 'center' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <Box sx={{ width: 16, height: 16, borderRadius: '50%', bgcolor: '#C8E6C9', border: '1px solid #1B5E20' }} />
-            <Typography variant="caption" fontWeight="bold" color="#1B5E20">Livre</Typography>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <Box sx={{ width: 16, height: 16, borderRadius: '50%', bgcolor: '#FFCDD2', border: '1px solid #B71C1C' }} />
-            <Typography variant="caption" fontWeight="bold" color="#B71C1C">Ocupada</Typography>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <Box sx={{ width: 16, height: 16, borderRadius: '50%', bgcolor: '#FFF9C4', border: '1px solid #F57F17' }} />
-            <Typography variant="caption" fontWeight="bold" color="#F57F17">Reservada</Typography>
-          </Box>
-        </Box>
-
-        <Grid container spacing={2}>
-          {mesas.map((mesa) => {
-            const styles = getStatusStyles(mesa.status);
-            return (
-              <Grid item xs={4} sm={3} md={2} key={mesa.id}>
-                <Paper
-                  elevation={3}
-                  onClick={() => handleMesaClick(mesa)}
-                  sx={{
-                    position: 'relative',
-                    paddingTop: '100%',
-                    bgcolor: styles.bgcolor,
-                    color: styles.color,
-                    borderRadius: 3,
-                    cursor: 'pointer',
-                    transition: 'transform 0.1s',
-                    '&:active': { transform: 'scale(0.96)' },
-                    overflow: 'hidden',
-                    boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-                    border: '1px solid rgba(0,0,0,0.1)'
-                  }}
-                >
-                  <Box
-                    sx={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Typography variant="h4" fontWeight="bold">
-                      {mesa.numero}
-                    </Typography>
-
-                    <Box
-                      sx={{
-                        position: 'absolute',
-                        bottom: 8,
-                        right: 8,
-                        display: 'flex',
-                        alignItems: 'center',
-                        opacity: 0.9,
-                        bgcolor: 'rgba(0,0,0,0.6)',
-                        color: 'white',
-                        borderRadius: 1,
-                        px: 0.5,
-                        py: 0.2
-                      }}
-                    >
-                      <People sx={{ fontSize: 12, mr: 0.5 }} />
-                      <Typography variant="caption" fontWeight="bold" sx={{ fontSize: '0.75rem' }}>
-                        {mesa.capacidade || 4}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Paper>
-              </Grid>
-            );
-          })}
+      <Box sx={{ p: 3 }}>
+        <LegendaStatus />
+        <Grid container spacing={3} sx={{ mt: 2 }}>
+          {mesas.map((mesa) => (
+            <CardMesa key={mesa.id} mesa={mesa} aoClicar={handleMesaClick} />
+          ))}
         </Grid>
-
-        {mesas.length === 0 && (
-          <Box sx={{ textAlign: 'center', mt: 4, color: 'text.secondary' }}>
-            <Typography>Nenhuma mesa encontrada.</Typography>
-          </Box>
-        )}
       </Box>
 
-      <Dialog open={dialogAbrirComandaOpen} onClose={() => setDialogAbrirComandaOpen(false)} fullWidth maxWidth="xs">
-        <DialogTitle sx={{ bgcolor: '#1B5E20', color: 'white' }}>
-          Abrir Mesa {selectedMesa?.numero}
-        </DialogTitle>
-        <DialogContent sx={{ mt: 2 }}>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2, mt: 1 }}>
-            Informe o nome do cliente (opcional) para abrir a comanda.
-          </Typography>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Nome do Cliente"
-            fullWidth
-            variant="outlined"
-            value={nomeCliente}
-            onChange={(e) => setNomeCliente(e.target.value)}
-          />
-        </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
-          <Button onClick={() => setDialogAbrirComandaOpen(false)} color="inherit">Cancelar</Button>
-          <Button
-            onClick={handleAbrirComanda}
-            variant="contained"
-            sx={{ bgcolor: '#1B5E20', '&:hover': { bgcolor: '#003300' } }}
-            startIcon={<AddCircle />}
-          >
-            Abrir Comanda
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <DialogAbrirComanda
+        open={dialogAbrirComandaOpen}
+        onClose={() => setDialogAbrirComandaOpen(false)}
+        selectedMesa={selectedMesa}
+        nomeCliente={nomeCliente}
+        setNomeCliente={setNomeCliente}
+        onAbrirComanda={handleAbrirComanda}
+      />
 
-      <Dialog open={dialogOpcoesMesaOpen} onClose={() => setDialogOpcoesMesaOpen(false)} fullWidth maxWidth="xs">
-        <DialogTitle sx={{ background: 'linear-gradient(135deg, #004D40 0%, #00695C 100%)', color: 'white' }}>
-          Mesa {selectedMesa?.numero}
-        </DialogTitle>
-        <DialogContent sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2, py: 4 }}>
+      <DialogOpcoesMesa
+        open={dialogOpcoesMesaOpen}
+        onClose={() => setDialogOpcoesMesaOpen(false)}
+        selectedMesa={selectedMesa}
+        openComandas={openComandas}
+        onAbrirComanda={() => {
+          setDialogOpcoesMesaOpen(false);
+          setNomeCliente('');
+          setDialogAbrirComandaOpen(true);
+        }}
+        onReservarMesa={handleReservarMesa}
+        onLiberarMesa={handleLiberarMesa}
+        onVerComanda={handleAbrirVerComanda}
+        onAbrirNovaComanda={() => {
+          setDialogOpcoesMesaOpen(false);
+          setNomeCliente('');
+          setDialogAbrirComandaOpen(true);
+        }}
+      />
 
-          {/* CASO 1: MESA LIVRE */}
-          {selectedMesa?.status === 'LIVRE' && (
-            <>
-              <Button
-                variant="contained"
-                startIcon={<AddCircle />}
-                onClick={() => {
-                  setDialogOpcoesMesaOpen(false);
-                  setNomeCliente('');
-                  setDialogAbrirComandaOpen(true);
-                }}
-                sx={{ bgcolor: '#1B5E20', py: 1.5 }}
-              >
-                Abrir Comanda
-              </Button>
-              <Button
-                variant="contained"
-                startIcon={<AccessTime />}
-                onClick={handleReservarMesa}
-                sx={{ bgcolor: '#F57F17', py: 1.5 }}
-              >
-                Reservar Mesa
-              </Button>
-            </>
-          )}
+      <DialogVerComanda
+        open={dialogVerComandaAberta}
+        onClose={() => setDialogVerComandaAberta(false)}
+        selectedMesa={selectedMesa}
+        comandaNome={selectedComandaId ? openComandas.find(c => c.id === selectedComandaId)?.nome : undefined}
+        comandaPedidos={comandaPedidos}
+        onAdicionarPedidos={handleAbrirAdicionarPedidos}
+        onFecharComanda={handleFecharComanda}
 
-          {/* CASO 2: MESA OCUPADA */}
-          {selectedMesa?.status === 'OCUPADA' && (
-            <>
-              <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'bold' }}>
-                Comandas Abertas:
-              </Typography>
-              <List sx={{ width: '100%', bgcolor: 'background.paper', mb: 2, maxHeight: 200, overflow: 'auto' }}>
-                {openComandas.map((comanda) => (
-                  <React.Fragment key={comanda.id}>
-                    <ListItem
-                      onClick={() => handleAbrirVerComanda(comanda.id)}
-                      sx={{
-                        border: '1px solid #e0e0e0',
-                        borderRadius: 1,
-                        mb: 1,
-                        cursor: 'pointer',
-                        '&:hover': { bgcolor: '#f5f5f5' }
-                      }}
-                    >
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-                        <Box>
-                          <Typography variant="body1" fontWeight="bold">{comanda.nome}</Typography>
-                          <Typography variant="caption" color="text.secondary">#{comanda.id}</Typography>
-                        </Box>
-                        <Visibility color="primary" />
-                      </Box>
-                    </ListItem>
-                  </React.Fragment>
-                ))}
-                {openComandas.length === 0 && (
-                  <Typography variant="body2" color="text.secondary" align="center">
-                    Nenhuma comanda aberta encontrada.
-                  </Typography>
-                )}
-              </List>
+      />
 
-              <Button
-                variant="contained"
-                startIcon={<AddCircle />}
-                onClick={() => {
-                  setDialogOpcoesMesaOpen(false);
-                  setNomeCliente('');
-                  setDialogAbrirComandaOpen(true);
-                }}
-                sx={{ bgcolor: '#4CAF50', py: 1.5 }}
-              >
-                Abrir Nova Comanda
-              </Button>
-            </>
-          )}
+      <DialogAdicionarPedidos
+        open={dialogAdicionarPedidosAberta}
+        onClose={() => setDialogAdicionarPedidosAberta(false)}
+        selectedMesa={selectedMesa}
+        menuItems={menuItems}
+        novosItensPedido={novosItensPedido}
+        onAlterarQuantidade={handleAlterarQuantidade}
+        onAlterarObs={handleAlterarObs}
+        onEnviarPedidos={handleEnviarPedidos}
+      />
 
-          {/* CASO 3: MESA RESERVADA */}
-          {selectedMesa?.status === 'RESERVADA' && (
-            <>
-              <Button
-                variant="contained"
-                startIcon={<AddCircle />}
-                onClick={() => {
-                  setDialogOpcoesMesaOpen(false);
-                  setNomeCliente('');
-                  setDialogAbrirComandaOpen(true);
-                }}
-                sx={{ bgcolor: '#1B5E20', py: 1.5 }}
-              >
-                Abrir Comanda
-              </Button>
-              <Button
-                variant="contained"
-                startIcon={<CheckCircle />}
-                onClick={handleLiberarMesa}
-                sx={{ bgcolor: '#1B5E20', py: 1.5 }}
-              >
-                Liberar Mesa
-              </Button>
-            </>
-          )}
-
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDialogOpcoesMesaOpen(false)}>Fechar</Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog open={dialogVerComandaAberta} onClose={() => setDialogVerComandaAberta(false)} fullWidth maxWidth="sm">
-        <DialogTitle sx={{ background: 'linear-gradient(135deg, #004D40 0%, #00695C 100%)', color: 'white' }}>
-          Comanda - Mesa {selectedMesa?.numero} {selectedComandaId && openComandas.find(c => c.id === selectedComandaId)?.nome ? `- ${openComandas.find(c => c.id === selectedComandaId)?.nome}` : ''}
-        </DialogTitle>
-        <DialogContent sx={{ mt: 2, p: 0 }}>
-          {!Array.isArray(comandaPedidos) || comandaPedidos.length === 0 ? (
-            <Box sx={{ p: 4, textAlign: 'center' }}>
-              <Typography color="text.secondary">Nenhum pedido realizado nesta comanda.</Typography>
-            </Box>
-          ) : (
-            <List>
-              {comandaPedidos.map((pedido) => (
-                <React.Fragment key={pedido.id}>
-                  <ListItem>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-                      <Box>
-                        <Typography variant="body1">{pedido.item?.nome || 'Item removido'}</Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {pedido.item?.categoria || ''}
-                        </Typography>
-                      </Box>
-                      <Box sx={{ textAlign: 'right' }}>
-                        <Typography variant="body2">Qtd: {pedido.quantidade}</Typography>
-                        <Chip
-                          label={pedido.status}
-                          size="small"
-                          color={pedido.status === 'PRONTO' ? 'success' : 'default'}
-                          sx={{ mt: 0.5 }}
-                        />
-                      </Box>
-                    </Box>
-                  </ListItem>
-                  <Divider />
-                </React.Fragment>
-              ))}
-            </List>
-          )}
-        </DialogContent>
-        <DialogActions sx={{ justifyContent: 'space-between', p: 2 }}>
-          <Button onClick={() => setDialogVerComandaAberta(false)} color="inherit">
-            Voltar
-          </Button>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%', maxWidth: 220 }}>
-            <Button
-              variant="contained"
-              startIcon={<AddCircle />}
-              onClick={handleAbrirAdicionarPedidos}
-              sx={{ bgcolor: '#4CAF50', width: '100%' }}
-            >
-              Adicionar Itens
-            </Button>
-            <Button
-              variant="contained"
-              startIcon={<Receipt />}
-              onClick={handleFecharComanda}
-              sx={{ bgcolor: '#D32F2F', width: '100%' }}
-            >
-              Fechar Comanda
-            </Button>
-          </Box>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog open={dialogAdicionarPedidosAberta} onClose={() => setDialogAdicionarPedidosAberta(false)} fullWidth maxWidth="md">
-        <DialogTitle sx={{ bgcolor: '#4CAF50', color: 'white' }}>
-          Adicionar Pedidos - Mesa {selectedMesa?.numero}
-        </DialogTitle>
-        <DialogContent sx={{ mt: 2 }}>
-          <Grid container spacing={2}>
-            {menuItems.map((item) => {
-              const currentQty = novosItensPedido[item.id]?.quantidade || 0;
-              return (
-                <Grid item xs={12} sm={6} key={item.id}>
-                  <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Typography fontWeight="bold">{item.nome}</Typography>
-                      <Typography color="primary" fontWeight="bold">R$ {item.preco.toFixed(2)}</Typography>
-                    </Box>
-                    <Typography variant="caption" color="text.secondary">{item.categoria}</Typography>
-
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <IconButton size="small" onClick={() => handleAlterarQuantidade(item.id, -1)} disabled={currentQty === 0}>
-                          <Remove />
-                        </IconButton>
-                        <Typography fontWeight="bold">{currentQty}</Typography>
-                        <IconButton size="small" onClick={() => handleAlterarQuantidade(item.id, 1)}>
-                          <Add />
-                        </IconButton>
-                      </Box>
-                    </Box>
-
-                    {currentQty > 0 && (
-                      <TextField
-                        size="small"
-                        placeholder="Observações:"
-                        fullWidth
-                        value={novosItensPedido[item.id]?.obs || ''}
-                        onChange={(e) => handleAlterarObs(item.id, e.target.value)}
-                        sx={{ mt: 1 }}
-                      />
-                    )}
-                  </Paper>
-                </Grid>
-              );
-            })}
-          </Grid>
-        </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
-          <Button onClick={() => setDialogAdicionarPedidosAberta(false)} color="inherit">Cancelar</Button>
-          <Button
-            onClick={handleEnviarPedidos}
-            variant="contained"
-            color="success"
-            startIcon={<Send />}
-            disabled={Object.keys(novosItensPedido).length === 0}
-          >
-            Enviar Pedidos
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog
+      <DialogPedidosProntos
         open={dialogPedidosOpen}
         onClose={() => setDialogPedidosOpen(false)}
-        fullWidth
-        maxWidth="sm"
-      >
-        <DialogTitle sx={{ bgcolor: '#004D40', color: 'white' }}>
-          Pedidos Prontos
-        </DialogTitle>
-        <DialogContent sx={{ mt: 2, p: 0 }}>
-          {pedidosProntos.length === 0 ? (
-            <Box sx={{ p: 4, textAlign: 'center' }}>
-              <CheckCircle sx={{ fontSize: 60, color: '#4CAF50', mb: 2 }} />
-              <Typography>Todos os pedidos foram entregues!</Typography>
-            </Box>
-          ) : (
-            <List>
-              {pedidosProntos.map((pedido) => (
-                <React.Fragment key={pedido.id}>
-                  <ListItem sx={{ flexDirection: 'column', alignItems: 'flex-start', py: 2 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', mb: 1 }}>
-                      <Typography fontWeight="bold">Comanda #{pedido.comandaId}</Typography>
-                      <Chip label="PRONTO" color="success" size="small" />
-                    </Box>
-                    <Typography variant="body1">{pedido.item.nome}</Typography>
-                    <Typography variant="body2" color="text.secondary">Qtd: {pedido.quantidade}</Typography>
-                    <Button
-                      variant="contained"
-                      color="success"
-                      fullWidth
-                      sx={{ mt: 2 }}
-                      onClick={() => handleMarcarEntregue(pedido.id)}
-                    >
-                      Entregar
-                    </Button>
-                  </ListItem>
-                  <Divider />
-                </React.Fragment>
-              ))}
-            </List>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDialogPedidosOpen(false)}>Fechar</Button>
-        </DialogActions>
-      </Dialog>
+        pedidosProntos={pedidosProntos}
+        onMarcarEntregue={handleMarcarEntregue}
+      />
 
-      <Dialog
+      <DialogPerfil
         open={dialogPerfilOpen}
         onClose={() => setDialogPerfilOpen(false)}
-        fullWidth
-        maxWidth="sm"
-      >
-        <DialogTitle sx={{ bgcolor: '#004D40', color: 'white' }}>
-          Perfil
-        </DialogTitle>
-        <DialogContent sx={{ mt: 2, p: 0 }}>
-          {dadosPerfil && (
-            <Box sx={{ p: 4, textAlign: 'center' }}>
-              <AccountCircle sx={{ fontSize: 60, color: '#4CAF50', mb: 2 }} />
-              <Typography><strong>Nome:</strong> {dadosPerfil.nome}</Typography>
-              <Typography><strong>Email:</strong> {dadosPerfil.email}</Typography>
-              <Typography><strong>CPF:</strong> {dadosPerfil.cpf}</Typography>
-              <Typography><strong>Matricula:</strong> {dadosPerfil.matricula}</Typography>
-              {meuBonus && (
-                <Box sx={{ p: 4, textAlign: 'center' }}>
-                  <Typography><strong>Bonus:</strong> {meuBonus?.bonusCalculado}</Typography>
-                </Box>
-              )}
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDialogPerfilOpen(false)}>Fechar</Button>
-        </DialogActions>
-      </Dialog>
+        dadosPerfil={dadosPerfil}
+        meuBonus={meuBonus}
+      />
 
-      <Dialog
+      <DialogMeusPedidos
         open={dialogMeusPedidosOpen}
         onClose={() => setDialogMeusPedidosOpen(false)}
-        fullWidth
-        maxWidth="sm"
-      >
-        <DialogTitle sx={{ bgcolor: '#004D40', color: 'white' }}>
-          Meus Pedidos
-        </DialogTitle>
-        <DialogContent sx={{ mt: 2, p: 0 }}>
-          {meusPedidos.length === 0 ? (
-            <Box sx={{ p: 4, textAlign: 'center' }}>
-              <Typography color="text.secondary">Você ainda não fez pedidos.</Typography>
-            </Box>
-          ) : (
-            <List>
-              {meusPedidos.map((pedido) => (
-                <React.Fragment key={pedido.id}>
-                  <ListItem>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-                      <Box>
-                        <Typography variant="body1">{pedido.item?.nome}</Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Comanda #{pedido.comandaId}
-                        </Typography>
-                      </Box>
-                      <Box sx={{ textAlign: 'right' }}>
-                        <Typography variant="body2">Qtd: {pedido.quantidade}</Typography>
-                        <Chip
-                          label={pedido.status}
-                          size="small"
-                          color={pedido.status === 'PRONTO' ? 'success' : 'default'}
-                          sx={{ mt: 0.5 }}
-                        />
-                      </Box>
-                    </Box>
-                  </ListItem>
-                  <Divider />
-                </React.Fragment>
-              ))}
-            </List>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDialogMeusPedidosOpen(false)}>Fechar</Button>
-        </DialogActions>
-      </Dialog>
+        meusPedidos={meusPedidos}
+      />
 
-      <Dialog
+      <DialogBonus
         open={dialogBonusOpen}
         onClose={() => setDialogBonusOpen(false)}
-        fullWidth
-        maxWidth="xs"
-      >
-        <DialogTitle sx={{ bgcolor: '#F57F17', color: 'white' }}>
-          Meu Bônus
-        </DialogTitle>
-        <DialogContent sx={{ mt: 2 }}>
-          <Box sx={{ display: 'flex', gap: 2, mb: 3, mt: 1 }}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Mês</InputLabel>
-              <Select
-                value={bonusMes}
-                label="Mês"
-                onChange={(e) => setBonusMes(Number(e.target.value))}
-              >
-                {[...Array(12)].map((_, i) => (
-                  <MenuItem key={i + 1} value={i + 1}>{i + 1}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <FormControl fullWidth size="small">
-              <InputLabel>Ano</InputLabel>
-              <Select
-                value={bonusAno}
-                label="Ano"
-                onChange={(e) => setBonusAno(Number(e.target.value))}
-              >
-                <MenuItem value={2024}>2024</MenuItem>
-                <MenuItem value={2025}>2025</MenuItem>
-              </Select>
-            </FormControl>
-            <Button variant="contained" onClick={handleBuscarBonus}>
-              Buscar
-            </Button>
-          </Box>
+        bonusMes={bonusMes}
+        setBonusMes={setBonusMes}
+        bonusAno={bonusAno}
+        setBonusAno={setBonusAno}
+        onBuscarBonus={handleBuscarBonus}
+        meuBonus={meuBonus}
+      />
 
-          {meuBonus ? (
-            <Box sx={{ textAlign: 'center', p: 2, bgcolor: '#FFF3E0', borderRadius: 2 }}>
-              <Typography variant="h6" color="text.secondary" gutterBottom>
-                Bônus Calculado
-              </Typography>
-              <Typography variant="h3" color="#E65100" fontWeight="bold">
-                R$ {meuBonus.bonusCalculado.toFixed(2)}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                Vendas Premium: R$ {meuBonus.totalVendasPremium.toFixed(2)}
-              </Typography>
-            </Box>
-          ) : (
-            <Box sx={{ textAlign: 'center', p: 2 }}>
-              <Typography color="text.secondary">Nenhum bônus encontrado para este período.</Typography>
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDialogBonusOpen(false)}>Fechar</Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+    </Box >
   );
 };
 
