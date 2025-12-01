@@ -51,9 +51,9 @@ services:
     container_name: restaurante-frontend
     restart: unless-stopped
     environment:
-      VITE_API_URL: http://18.189.180.195:8080
-    ports:
-      - "3000:5173"
+      VITE_API_URL: https://3.21.93.106.nip.io
+    expose:
+      - "5173"
     depends_on:
       - backend
     networks:
@@ -62,10 +62,31 @@ services:
       - ./frontend/src:/app/src
       - ./frontend/public:/app/public
 
+  caddy:
+    image: caddy:2-alpine
+    container_name: restaurante-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - restaurante-network
+    depends_on:
+      - frontend
+      - backend
+
 networks:
   restaurante-network:
     driver: bridge
 
 volumes:
   postgres_data:
+    driver: local
+  caddy_data:
+    driver: local
+  caddy_config:
     driver: local
