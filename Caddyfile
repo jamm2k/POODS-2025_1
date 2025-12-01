@@ -1,4 +1,4 @@
-3.21.93.106/.nip.io {
+3.21.93.106.nip.io {
     reverse_proxy /api/* backend:8080
-    reverse_proxy * frontend:3000
+    reverse_proxy * frontend:5173
 }
