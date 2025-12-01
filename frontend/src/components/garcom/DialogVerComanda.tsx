@@ -12,7 +12,7 @@ import {
     Divider,
     Chip
 } from '@mui/material';
-import { AddCircle, Receipt } from '@mui/icons-material';
+import { AddCircle, Receipt, AttachMoney } from '@mui/icons-material';
 import { MesaResponseDTO } from '../../dto/mesa/MesaResponseDTO';
 import { PedidoResponseDTO } from '../../dto/pedido/PedidoResponseDTO';
 
@@ -24,6 +24,7 @@ interface DialogVerComandaProps {
     comandaPedidos: PedidoResponseDTO[];
     onAdicionarPedidos: () => void;
     onFecharComanda: () => void;
+    onPagarComanda: () => void;
 }
 
 const DialogVerComanda: React.FC<DialogVerComandaProps> = ({
@@ -33,7 +34,8 @@ const DialogVerComanda: React.FC<DialogVerComandaProps> = ({
     comandaNome,
     comandaPedidos,
     onAdicionarPedidos,
-    onFecharComanda
+    onFecharComanda,
+    onPagarComanda
 }) => {
     return (
         <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
@@ -86,6 +88,14 @@ const DialogVerComanda: React.FC<DialogVerComandaProps> = ({
                         sx={{ bgcolor: '#4CAF50', width: '100%' }}
                     >
                         Adicionar Itens
+                    </Button>
+                    <Button
+                        variant="contained"
+                        startIcon={<AttachMoney />}
+                        onClick={onPagarComanda}
+                        sx={{ bgcolor: '#2196F3', width: '100%' }}
+                    >
+                        Pagar Comanda
                     </Button>
                     <Button
                         variant="contained"

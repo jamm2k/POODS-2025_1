@@ -13,6 +13,7 @@ public class CozinheiroResponseDTO {
     private String nome;
     private String email;
     private String matricula;
+    private String cpf;
     private Double salario;
     private String status;
     private String tipoUsuario;

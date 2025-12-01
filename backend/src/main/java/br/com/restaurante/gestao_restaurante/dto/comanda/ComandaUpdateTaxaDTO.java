@@ -6,5 +6,5 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ComandaUpdateTaxaDTO {
-    private boolean TaxaServico;
+    private boolean taxaServico;
 }

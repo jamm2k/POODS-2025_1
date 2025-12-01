@@ -109,6 +109,11 @@ class GarcomService {
     return response.data;
   }
 
+  async atualizarTaxaServico(id: number, taxaServico: boolean): Promise<ComandaResponseDTO> {
+    const response = await api.put(`/api/comandas/${id}/taxa-servico`, { taxaServico });
+    return response.data;
+  }
+
   async atualizarStatusMesa(id: number, status: string): Promise<MesaResponseDTO> {
     const dto: MesaUpdateStatusDTO = { status };
     const response = await api.put(`/api/mesas/${id}/status`, dto);

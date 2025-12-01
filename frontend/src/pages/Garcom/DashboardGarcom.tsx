@@ -37,6 +37,7 @@ import DialogPedidosProntos from '../../components/garcom/DialogPedidosProntos';
 import DialogPerfil from '../../components/garcom/DialogPerfil';
 import DialogMeusPedidos from '../../components/garcom/DialogMeusPedidos';
 import DialogBonus from '../../components/garcom/DialogBonus';
+import DialogPagarComanda from '../../components/garcom/DialogPagarComanda';
 
 interface PedidoCreate {
   itemId: number;
@@ -64,6 +65,7 @@ const DashboardGarcom: React.FC = () => {
   const [selectedComandaId, setSelectedComandaId] = useState<number | null>(null);
   const [openComandas, setOpenComandas] = useState<ComandaResponseDTO[]>([]);
   const [comandaPedidos, setComandaPedidos] = useState<PedidoResponseDTO[]>([]);
+  const [dialogPagarComandaOpen, setDialogPagarComandaOpen] = useState(false);
   const [menuItems, setMenuItems] = useState<ItemResponseDTO[]>([]);
   const [novosItensPedido, setNovosItensPedido] = useState<{ [key: number]: PedidoCreate }>({});
   const [dialogPerfilOpen, setDialogPerfilOpen] = useState(false);
@@ -287,6 +289,43 @@ const DashboardGarcom: React.FC = () => {
     }
   };
 
+  const handleAbrirPagarComanda = () => {
+    setDialogVerComandaAberta(false);
+    setDialogPagarComandaOpen(true);
+  };
+
+  const handlePagarComanda = async (comandaId: number, incluirTaxa: boolean) => {
+    if (!selectedMesa) return;
+
+    try {
+      // 1. Atualizar preferência de taxa de serviço
+      await garcomService.atualizarTaxaServico(comandaId, incluirTaxa);
+
+      // 2. Fechar comanda (pagar)
+      await garcomService.atualizarStatusComanda(comandaId, 'PAGA');
+
+      // 3. Verificar se mesa deve ser liberada
+      const comandas = await garcomService.getComandasByMesa(selectedMesa.id);
+      const abertas = comandas.filter((c: any) => c.status && c.status.toUpperCase() === 'ABERTA');
+
+      if (abertas.length === 0) {
+        await garcomService.atualizarStatusMesa(selectedMesa.id, 'LIVRE');
+      }
+
+      setDialogPagarComandaOpen(false);
+      setDialogOpcoesMesaOpen(false);
+      await buscarMesas();
+      alert('Pagamento realizado com sucesso!');
+    } catch (error: any) {
+      console.error('Erro ao realizar pagamento:', error);
+      const errorMessage =
+        (typeof error.response?.data === 'string' ? error.response.data : error.response?.data?.message) ||
+        error.message ||
+        'Erro ao realizar pagamento. Tente novamente.';
+      alert(errorMessage);
+    }
+  };
+
   const handleMarcarEntregue = async (pedidoId: number) => {
     try {
       await garcomService.marcarPedidoEntregue(pedidoId);
@@ -446,7 +485,15 @@ const DashboardGarcom: React.FC = () => {
         comandaPedidos={comandaPedidos}
         onAdicionarPedidos={handleAbrirAdicionarPedidos}
         onFecharComanda={handleFecharComanda}
+        onPagarComanda={handleAbrirPagarComanda}
+      />
 
+      <DialogPagarComanda
+        open={dialogPagarComandaOpen}
+        onClose={() => setDialogPagarComandaOpen(false)}
+        comandaId={selectedComandaId}
+        pedidos={comandaPedidos}
+        onConfirmarPagamento={handlePagarComanda}
       />
 
       <DialogAdicionarPedidos
