@@ -31,6 +31,7 @@ public class BarmanMapper {
         dto.setStatus(barman.getStatus());
         dto.setTipoUsuario(barman.getTipoUsuario());
         dto.setDataAdmissao(barman.getDataAdmissao());
+        dto.setCpf(barman.getCpf());
         return dto;
     }
 }

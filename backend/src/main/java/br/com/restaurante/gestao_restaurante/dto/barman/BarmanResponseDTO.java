@@ -10,6 +10,7 @@ public class BarmanResponseDTO {
     private String nome;
     private String matricula;
     private Double salario;
+    private String cpf;
     private String email;
     private String status;
     private String tipoUsuario;

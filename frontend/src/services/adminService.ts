@@ -101,17 +101,16 @@ class AdminService {
         await api.delete(endpoint);
     }
 
-
-    //itens
-    async getItens(): Promise<ItemResponseDTO[]> {
-        const response = await api.get('/api/itens');
-        return response.data;
-    }
-
     async getBonusGarcom(id: number, mes: number, ano: number) {
         const response = await api.get(`/api/garcons/${id}/bonus`, {
             params: { mes, ano }
         });
+        return response.data;
+    }
+
+    //itens
+    async getItens(): Promise<ItemResponseDTO[]> {
+        const response = await api.get('/api/itens');
         return response.data;
     }
 

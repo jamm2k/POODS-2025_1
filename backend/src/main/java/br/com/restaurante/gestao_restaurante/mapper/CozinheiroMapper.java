@@ -31,6 +31,7 @@ public class CozinheiroMapper {
         dto.setStatus(cozinheiro.getStatus());
         dto.setTipoUsuario(cozinheiro.getTipoUsuario());
         dto.setDataAdmissao(cozinheiro.getDataAdmissao());
+        dto.setCpf(cozinheiro.getCpf());
         return dto;
     }
 }
