@@ -10,9 +10,12 @@ export default defineConfig(({ mode }) => ({
       registerType: 'autoUpdate',
       manifest: {
         name: 'Sistema de Restaurante',
-        short_name: 'RestauranteApp',
+        short_name: 'Restaurante do João',
         description: 'Sistema de gerenciamento de pedidos.',
         theme_color: '#ffffff',
+        background_color: '#ffffff',
+        display: 'standalone',
+        start_url: '/',
         icons: [
           { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
           { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },

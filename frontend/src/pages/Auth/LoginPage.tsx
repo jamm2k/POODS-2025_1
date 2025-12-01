@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-  Container,
   TextField,
   Button,
   Box,
@@ -302,6 +301,8 @@ const LoginPage: React.FC = () => {
             <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}>Garçom</Typography>
             <Typography variant="caption" color="text.secondary">•</Typography>
             <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}>Cozinheiro</Typography>
+            <Typography variant="caption" color="text.secondary">•</Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}>Barman</Typography>
           </Box>
         </Box>
       </Paper>
