@@ -51,7 +51,7 @@ services:
     container_name: restaurante-frontend
     restart: unless-stopped
     environment:
-      VITE_API_URL: http://localhost:8080
+      VITE_API_URL: http://18.189.180.195:8080
     ports:
       - "3000:5173"
     depends_on:
