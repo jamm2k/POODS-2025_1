@@ -298,13 +298,9 @@ const DashboardGarcom: React.FC = () => {
     if (!selectedMesa) return;
 
     try {
-      // 1. Atualizar preferência de taxa de serviço
       await garcomService.atualizarTaxaServico(comandaId, incluirTaxa);
 
-      // 2. Fechar comanda (pagar)
       await garcomService.atualizarStatusComanda(comandaId, 'PAGA');
-
-      // 3. Verificar se mesa deve ser liberada
       const comandas = await garcomService.getComandasByMesa(selectedMesa.id);
       const abertas = comandas.filter((c: any) => c.status && c.status.toUpperCase() === 'ABERTA');
 

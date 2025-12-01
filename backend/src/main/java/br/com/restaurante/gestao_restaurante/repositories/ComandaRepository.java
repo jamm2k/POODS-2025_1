@@ -20,4 +20,6 @@ public interface ComandaRepository extends JpaRepository<Comanda, Long> {
 
     List<Comanda> findByMesa(Mesa mesa);
 
+    boolean existsByMesaAndNomeAndStatus(Mesa mesa, String nome, String status);
+
 }

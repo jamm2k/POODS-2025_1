@@ -69,9 +69,9 @@ public class ComandaService {
         Mesa mesa = mesaRepository.findById(comandaDTO.getMesaId())
                 .orElseThrow(() -> new RuntimeException("Mesa não encontrada com o ID: " + comandaDTO.getMesaId()));
 
-        comandaRepository.findByMesaAndNome(mesa, comandaDTO.getNome()).ifPresent(m -> {
-            throw new RuntimeException("Erro: Nome da comanda já cadastrado.");
-        });
+        if (comandaRepository.existsByMesaAndNomeAndStatus(mesa, comandaDTO.getNome(), "ABERTA")) {
+            throw new RuntimeException("Erro: Já existe uma comanda aberta com este nome nesta mesa.");
+        }
 
         Garcom garcom = garcomRepository.findById(comandaDTO.getGarcomId())
                 .orElseThrow(() -> new RuntimeException("Garçom não encontrado com o ID: " + comandaDTO.getGarcomId()));
@@ -84,7 +84,7 @@ public class ComandaService {
         comanda.setValorTotal(0.0);
         comanda.setTaxaServico(true);
 
-        if (mesa.getStatus().equals("LIVRE")) {
+        if (mesa.getStatus().equals("LIVRE") || mesa.getStatus().equals("RESERVADA")) {
             mesa.setStatus("OCUPADA");
         }
 
