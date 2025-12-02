@@ -73,6 +73,8 @@ const DashboardGarcom: React.FC = () => {
 
   const [dialogMeusPedidosOpen, setDialogMeusPedidosOpen] = useState(false);
   const [meusPedidos, setMeusPedidos] = useState<PedidoResponseDTO[]>([]);
+  const [meusPedidosMes, setMeusPedidosMes] = useState(new Date().getMonth() + 1);
+  const [meusPedidosAno, setMeusPedidosAno] = useState(new Date().getFullYear());
 
   const [dialogBonusOpen, setDialogBonusOpen] = useState(false);
   const [meuBonus, setMeuBonus] = useState<RelatorioGarcomDTO | null>(null);
@@ -179,11 +181,21 @@ const DashboardGarcom: React.FC = () => {
 
   const handleAbrirMeusPedidos = async () => {
     try {
-      const pedidos = await garcomService.getMeusPedidos();
+      const pedidos = await garcomService.getMeusPedidos(meusPedidosMes, meusPedidosAno);
       setMeusPedidos(pedidos);
       setDialogMeusPedidosOpen(true);
     } catch (error) {
       console.error('Erro ao buscar meus pedidos:', error);
+      alert('Erro ao buscar pedidos.');
+    }
+  };
+
+  const handleBuscarMeusPedidos = async () => {
+    try {
+      const pedidos = await garcomService.getMeusPedidos(meusPedidosMes, meusPedidosAno);
+      setMeusPedidos(pedidos);
+    } catch (error) {
+      console.error('Erro ao buscar meus pedidos filtrados:', error);
       alert('Erro ao buscar pedidos.');
     }
   };
@@ -521,6 +533,11 @@ const DashboardGarcom: React.FC = () => {
         open={dialogMeusPedidosOpen}
         onClose={() => setDialogMeusPedidosOpen(false)}
         meusPedidos={meusPedidos}
+        mes={meusPedidosMes}
+        setMes={setMeusPedidosMes}
+        ano={meusPedidosAno}
+        setAno={setMeusPedidosAno}
+        onBuscar={handleBuscarMeusPedidos}
       />
 
       <DialogBonus

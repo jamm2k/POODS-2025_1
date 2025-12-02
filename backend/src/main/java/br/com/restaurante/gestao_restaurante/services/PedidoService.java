@@ -73,11 +73,12 @@ public class PedidoService {
                 .toList();
     }
 
-    public List<PedidoResponseDTO> findPedidosByGarcom(Long garcomId) {
+    public List<PedidoResponseDTO> findPedidosByGarcom(Long garcomId, int ano, int mes) {
         Garcom garcom = garcomRepository
                 .findById(garcomId).orElseThrow(() -> new EntityNotFoundException("Garcom não encontrado"));
 
-        List<Pedido> pedidos = pedidoRepository.findByGarcom(garcom);
+        List<Pedido> pedidos = pedidoRepository.findByGarcomAndAnoAndMes(garcom, ano, mes);
+
         return pedidos.stream()
                 .map(pedidoMapper::toResponseDTO)
                 .toList();

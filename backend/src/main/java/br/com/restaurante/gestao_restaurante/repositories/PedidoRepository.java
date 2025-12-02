@@ -32,4 +32,7 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
             @Param("garcom") Garcom garcom,
             @Param("inicioMes") LocalDateTime inicioMes,
             @Param("fimMes") LocalDateTime fimMes);
+
+    @Query("SELECT p FROM Pedido p WHERE p.garcom = :garcom AND YEAR(p.dataHora) = :ano AND MONTH(p.dataHora) = :mes")
+    List<Pedido> findByGarcomAndAnoAndMes(@Param("garcom") Garcom garcom, @Param("ano") int ano, @Param("mes") int mes);
 }

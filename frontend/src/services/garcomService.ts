@@ -32,13 +32,16 @@ class GarcomService {
   }
 
   //pedidos
-  async getMeusPedidos(): Promise<PedidoResponseDTO[]> {
-    const response = await api.get('/api/garcons/me/pedidos');
+  async getMeusPedidos(mes: number, ano: number): Promise<PedidoResponseDTO[]> {
+    const response = await api.get('/api/garcons/me/pedidos', {
+      params: { mes, ano }
+    });
     return response.data;
   }
 
   async getPedidosProntos(): Promise<PedidoResponseDTO[]> {
-    const pedidos = await this.getMeusPedidos();
+    const hoje = new Date();
+    const pedidos = await this.getMeusPedidos(hoje.getMonth() + 1, hoje.getFullYear());
     return pedidos.filter(p => p.status === 'PRONTO');
   }
 
