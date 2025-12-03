@@ -95,13 +95,15 @@ public class GarcomController {
 
     @GetMapping("/me/pedidos")
     public ResponseEntity <List<PedidoResponseDTO>> buscarMeusPratos(
-            Authentication authentication
+            Authentication authentication,
+            @RequestParam int mes,
+            @RequestParam int ano
     ) {
 
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         Long garcomIdLogado = userDetails.getId();
 
-        List <PedidoResponseDTO> pedidos = pedidoService.findPedidosByGarcom(garcomIdLogado);
+        List <PedidoResponseDTO> pedidos = pedidoService.findPedidosByGarcom(garcomIdLogado, ano, mes);
 
         return ResponseEntity.ok(pedidos);
     } 

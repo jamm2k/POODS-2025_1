@@ -41,7 +41,8 @@ public class PedidoController {
         } else if (comandaId != null) {
             pedidos = pedidoService.findPedidosByComanda(comandaId);
         } else if (garcomId != null) {
-            pedidos = pedidoService.findPedidosByGarcom(garcomId);
+            java.time.LocalDate hoje = java.time.LocalDate.now();
+            pedidos = pedidoService.findPedidosByGarcom(garcomId, hoje.getYear(), hoje.getMonthValue());
         } else {
             pedidos = pedidoService.findAllPedidos();
         }
